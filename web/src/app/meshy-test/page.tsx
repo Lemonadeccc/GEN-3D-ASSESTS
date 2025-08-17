@@ -1,7 +1,10 @@
 'use client';
 
+// 禁用静态生成
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
+import { Navbar } from '@/components/web3/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { APIStatusPanel } from '@/components/common/APIStatusPanel';
 import { useBalance, useTextTo3D, useTaskStatus } from '@/hooks/use-meshy';
-import { TextTo3DParams } from '@/lib/meshy/types';
+import { TextTo3DParams, TaskStatusResponse } from '@/lib/meshy/types';
 import { calculateCost, estimateGenerationTime } from '@/lib/meshy/config';
 import { Sparkles, Clock, DollarSign, Zap } from 'lucide-react';
 
@@ -20,7 +23,7 @@ export default function MeshyTestPage() {
   // Hooks
   const { data: balance, isLoading: balanceLoading } = useBalance();
   const textTo3DMutation = useTextTo3D();
-  const { data: taskStatus } = useTaskStatus(currentTaskId);
+  const { data: taskStatus } = useTaskStatus(currentTaskId) as { data: TaskStatusResponse | undefined };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -47,8 +50,9 @@ export default function MeshyTestPage() {
   const estimatedTime = estimateGenerationTime('preview', 5000);
 
   return (
-    <MainLayout>
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <Badge variant="secondary" className="text-sm">
@@ -265,6 +269,6 @@ export default function MeshyTestPage() {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }

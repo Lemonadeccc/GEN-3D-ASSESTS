@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
+import { Navbar } from '@/components/web3/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,9 @@ export default function GeneratePage() {
   };
 
   return (
-    <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <Badge variant="secondary" className="text-sm">
@@ -186,6 +187,6 @@ export default function GeneratePage() {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }

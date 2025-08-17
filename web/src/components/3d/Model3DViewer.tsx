@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useRef, useState, useEffect } from 'react';
+import { Suspense, useRef, useState, useEffect, memo, useCallback, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF, useFBX, Environment } from '@react-three/drei';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,10 +20,11 @@ import {
 } from 'lucide-react';
 import { TaskStatusResponse } from '@/lib/meshy/types';
 import { useModelDownload } from '@/hooks/use-model-download';
+import { toast } from 'sonner';
 
-// GLB模型组件
-function GLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
-  const modelRef = useRef<any>();
+// GLB模型组件 - 优化版本
+const GLBModel = memo(function GLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
+  const modelRef = useRef<any>(null);
 
   try {
     const { scene } = useGLTF(url);
@@ -35,9 +36,9 @@ function GLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; o
       }
     }, [scene, onLoad, url]);
 
-    useFrame(() => {
+    useFrame((state, delta) => {
       if (modelRef.current) {
-        modelRef.current.rotation.y += 0.01;
+        modelRef.current.rotation.y += delta * 0.5; // 使用 delta 实现平滑旋转
       }
     });
 
@@ -48,11 +49,11 @@ function GLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; o
     }, [error, onError]);
     return null;
   }
-}
+});
 
-// FBX模型组件
-function FBXModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
-  const modelRef = useRef<any>();
+// FBX模型组件 - 优化版本
+const FBXModel = memo(function FBXModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
+  const modelRef = useRef<any>(null);
 
   try {
     const fbx = useFBX(url);
@@ -63,9 +64,9 @@ function FBXModel({ url, onLoad, onError }: { url: string; onLoad: () => void; o
       }
     }, [fbx, onLoad]);
 
-    useFrame(() => {
+    useFrame((state, delta) => {
       if (modelRef.current) {
-        modelRef.current.rotation.y += 0.01;
+        modelRef.current.rotation.y += delta * 0.5; // 使用 delta 实现平滑旋转
       }
     });
 
@@ -76,15 +77,15 @@ function FBXModel({ url, onLoad, onError }: { url: string; onLoad: () => void; o
     }, [error, onError]);
     return null;
   }
-}
+});
 
-// 后备模型
-function FallbackModel() {
-  const meshRef = useRef<any>();
+// 后备模型 - 优化版本
+const FallbackModel = memo(function FallbackModel() {
+  const meshRef = useRef<any>(null);
 
-  useFrame(() => {
+  useFrame((state, delta) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y += 0.01;
+      meshRef.current.rotation.y += delta * 0.5; // 使用 delta 实现平滑旋转
     }
   });
 
@@ -94,14 +95,15 @@ function FallbackModel() {
       <meshStandardMaterial color="#666" wireframe />
     </mesh>
   );
-}
+});
 
 interface Model3DViewerProps {
   taskResult: TaskStatusResponse;
   className?: string;
+  autoDownload?: boolean; // 新增：控制是否自动下载
 }
 
-export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
+export function Model3DViewer({ taskResult, className, autoDownload = false }: Model3DViewerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [autoRotate, setAutoRotate] = useState(true);
   const [loadStatus, setLoadStatus] = useState<'idle' | 'downloading' | 'loading' | 'success' | 'error'>('idle');
@@ -111,26 +113,52 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
 
   const { downloadModel, getDownloadState } = useModelDownload();
 
-  // 选择最佳格式：GLB > FBX（只使用兼容性好的格式）
-  const getBestModelUrl = () => {
+  // 选择最佳格式：GLB > FBX（只使用兼容性好的格式）- 使用 useMemo 优化
+  const getBestModelUrl = useMemo(() => {
+    // 首先检查标准的model_urls字段
     if (taskResult.model_urls?.glb) {
       return { url: taskResult.model_urls.glb, format: 'GLB' as const };
     } else if (taskResult.model_urls?.fbx) {
       return { url: taskResult.model_urls.fbx, format: 'FBX' as const };
     }
+    
+    // 对于refine模式，可能数据在不同的字段中
+    // 检查是否有texture_urls或其他可能的模型URL字段
+    if (taskResult.texture_urls && taskResult.texture_urls.length > 0) {
+      // texture_urls是一个对象数组，包含贴图URL，不包含模型文件
+      // 跳过这个检查，因为texture_urls不包含.glb文件
+    }
+    
+    // TaskStatusResponse类型中没有preview_url字段，跳过这个检查
+    
+    // 检查thumbnail_url是否意外包含模型文件
+    if (taskResult.thumbnail_url && (taskResult.thumbnail_url.includes('.glb') || taskResult.thumbnail_url.includes('.fbx'))) {
+      const format = taskResult.thumbnail_url.includes('.glb') ? 'GLB' : 'FBX';
+      return { url: taskResult.thumbnail_url, format: format as 'GLB' | 'FBX' };
+    }
+    
+    console.warn('No valid model URL found in task result:', {
+      id: taskResult.id,
+      mode: taskResult.mode,
+      status: taskResult.status,
+      model_urls: taskResult.model_urls,
+      texture_urls: taskResult.texture_urls,
+      thumbnail_url: taskResult.thumbnail_url
+    });
+    
     return null;
-  };
+  }, [taskResult]); // 依赖于 taskResult
 
-  const bestModel = getBestModelUrl();
+  const bestModel = getBestModelUrl;
 
-  // 自动下载最佳格式的模型
+  // 优化：条件性自动下载 - 只在 autoDownload 为 true 时才自动下载
   useEffect(() => {
-    if (bestModel && !localModelUrl && loadStatus === 'idle') {
+    if (autoDownload && bestModel && !localModelUrl && loadStatus === 'idle') {
       handleDownloadAndLoad(bestModel.url, bestModel.format);
     }
-  }, [bestModel, localModelUrl, loadStatus]);
+  }, [autoDownload, bestModel, localModelUrl, loadStatus]);
 
-  const handleDownloadAndLoad = async (url: string, format: 'GLB' | 'FBX') => {
+  const handleDownloadAndLoad = useCallback(async (url: string, format: 'GLB' | 'FBX') => {
     setLoadStatus('downloading');
     setErrorMessage('');
     setCurrentFormat(format);
@@ -153,13 +181,16 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
       setLoadStatus('error');
       setErrorMessage(error.message || '下载失败');
     }
-  };
+  }, [downloadModel]); // 添加依赖
 
-  const handleModelLoad = () => {
+  const handleModelLoad = useCallback(() => {
     setLoadStatus('success');
-  };
+    if (currentFormat) {
+      toast.success(`${currentFormat} 模型加载成功！`);
+    }
+  }, [currentFormat]);
 
-  const handleModelError = (error: any) => {
+  const handleModelError = useCallback((error: any) => {
     setLoadStatus('error');
     const errorMsg = error?.message || '模型加载失败';
     setErrorMessage(errorMsg);
@@ -169,9 +200,10 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
       currentFormat,
       taskResult: taskResult.id
     });
-  };
+  }, [localModelUrl, currentFormat, taskResult.id]);
 
-  const getModelComponent = () => {
+  // 使用 useMemo 优化模型组件渲染
+  const getModelComponent = useMemo(() => {
     if (!localModelUrl || !currentFormat) return <FallbackModel />;
 
     switch (currentFormat) {
@@ -182,7 +214,7 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
       default:
         return <FallbackModel />;
     }
-  };
+  }, [localModelUrl, currentFormat, handleModelLoad, handleModelError]);
 
   const downloadState = bestModel ? getDownloadState(bestModel.url, bestModel.format) : null;
 
@@ -193,8 +225,57 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
           <div className="text-center space-y-2">
             <Box className="h-12 w-12 mx-auto text-muted-foreground" />
             <p className="text-muted-foreground">暂无3D模型</p>
-            <p className="text-xs text-muted-foreground">仅支持GLB和FBX格式</p>
+            <p className="text-xs text-muted-foreground">
+              任务状态: {taskResult.status} | 模式: {taskResult.mode}
+            </p>
+            <details className="text-xs text-muted-foreground">
+              <summary className="cursor-pointer">调试信息</summary>
+              <pre className="mt-2 text-left bg-muted p-2 rounded text-xs">
+                {JSON.stringify({
+                  id: taskResult.id,
+                  status: taskResult.status,
+                  mode: taskResult.mode,
+                  model_urls: taskResult.model_urls,
+                  texture_urls: taskResult.texture_urls?.slice(0, 3),
+                  thumbnail_url: taskResult.thumbnail_url
+                }, null, 2)}
+              </pre>
+            </details>
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 如果没有开启自动下载且没有本地模型，显示预览按钮
+  if (!autoDownload && !localModelUrl && loadStatus === 'idle') {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Box className="h-5 w-5" />
+            <span>3D 模型预览</span>
+            {bestModel && (
+              <Badge variant="outline">{bestModel.format}</Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center h-64 space-y-4">
+          <Eye className="h-16 w-16 text-muted-foreground" />
+          <div className="text-center space-y-2">
+            <p className="font-medium">点击预览 3D 模型</p>
+            <p className="text-sm text-muted-foreground">
+              格式: {bestModel.format} | 大小: 预计 2-10MB
+            </p>
+          </div>
+          <Button 
+            onClick={() => handleDownloadAndLoad(bestModel.url, bestModel.format)}
+            disabled={loadStatus !== 'idle'}
+            className="flex items-center space-x-2"
+          >
+            <Eye className="h-4 w-4" />
+            <span>开始预览</span>
+          </Button>
         </CardContent>
       </Card>
     );
@@ -235,10 +316,17 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
         </div>
       )}
 
-      {/* 3D Canvas */}
+      {/* 3D Canvas - 优化性能设置 */}
       <Canvas
         camera={{ position: [0, 0, 5], fov: 45 }}
         className="rounded-lg"
+        dpr={[1, 2]} // 限制像素比，提升性能
+        performance={{ min: 0.5 }} // 自动性能调节
+        gl={{ 
+          antialias: false, // 禁用抗锯齿提升性能
+          alpha: false,     // 禁用透明度提升性能
+          powerPreference: "high-performance" // 优先使用高性能GPU
+        }}
         onCreated={({ gl }) => {
           gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
           console.log('Canvas created successfully');
@@ -252,7 +340,7 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
         <pointLight position={[-10, -10, -5]} intensity={0.5} />
 
         <Suspense fallback={<FallbackModel />}>
-          {getModelComponent()}
+          {getModelComponent}
           <Environment preset="city" />
         </Suspense>
 
@@ -262,6 +350,8 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
           enableRotate={true}
           dampingFactor={0.05}
           screenSpacePanning={false}
+          maxPolarAngle={Math.PI} // 允许全方位旋转
+          enableDamping={true}    // 启用阻尼，使操作更流畅
         />
       </Canvas>
 
@@ -392,25 +482,25 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
 
           <div className="flex flex-wrap gap-2">
             {taskResult.model_urls?.glb && (
-              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.glb, '_blank')}>
+              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls?.glb, '_blank')}>
                 <Download className="h-4 w-4 mr-2" />
                 下载 GLB
               </Button>
             )}
             {taskResult.model_urls?.fbx && (
-              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.fbx, '_blank')}>
+              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls?.fbx, '_blank')}>
                 <Download className="h-4 w-4 mr-2" />
                 下载 FBX
               </Button>
             )}
             {taskResult.model_urls?.obj && (
-              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.obj, '_blank')}>
+              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls?.obj, '_blank')}>
                 <Download className="h-4 w-4 mr-2" />
                 下载 OBJ
               </Button>
             )}
             {taskResult.model_urls?.usdz && (
-              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.usdz, '_blank')}>
+              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls?.usdz, '_blank')}>
                 <Download className="h-4 w-4 mr-2" />
                 下载 USDZ
               </Button>

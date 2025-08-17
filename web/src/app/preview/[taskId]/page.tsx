@@ -1,18 +1,20 @@
-import { MainLayout } from '@/components/layout/MainLayout';
+import { Navbar } from '@/components/web3/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Eye } from 'lucide-react';
 
 interface PreviewPageProps {
-  params: {
+  params: Promise<{
     taskId: string;
-  };
+  }>;
 }
 
-export default function PreviewPage({ params }: PreviewPageProps) {
+export default async function PreviewPage({ params }: PreviewPageProps) {
+  const { taskId } = await params;
   return (
-    <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         <div className="text-center space-y-4">
           <Badge variant="secondary" className="text-sm">
             <Eye className="mr-2 h-4 w-4" />
@@ -22,7 +24,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
             3D 模型预览
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            预览任务 {params.taskId} 生成的 3D 模型
+            预览任务 {taskId} 生成的 3D 模型
           </p>
         </div>
 
@@ -35,11 +37,11 @@ export default function PreviewPage({ params }: PreviewPageProps) {
               模型预览功能正在开发中，敬请期待...
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              任务 ID: {params.taskId}
+              任务 ID: {taskId}
             </p>
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }

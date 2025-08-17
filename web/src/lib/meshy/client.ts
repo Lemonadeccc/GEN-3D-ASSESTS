@@ -262,7 +262,7 @@ export class MeshyClient {
       }
 
       // 创建Blob并返回URL
-      const blob = new Blob(chunks);
+      const blob = new Blob(chunks as BlobPart[]);
       const blobUrl = URL.createObjectURL(blob);
       
       console.log('Model downloaded successfully via proxy, size:', blob.size, 'bytes');

@@ -1,14 +1,10 @@
 'use client';
 
+import { ConnectKitButton } from 'connectkit';
 import { Button } from '@/components/ui/button';
 import { Wallet, Settings } from 'lucide-react';
 
 export function HeaderActions() {
-  const handleWalletConnect = () => {
-    // TODO: 实现钱包连接逻辑
-    console.log('Connect wallet clicked');
-  };
-
   const handleSettings = () => {
     // TODO: 实现设置功能
     console.log('Settings clicked');
@@ -16,14 +12,23 @@ export function HeaderActions() {
 
   return (
     <div className="flex items-center space-x-2">
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={handleWalletConnect}
-      >
-        <Wallet className="h-4 w-4 mr-2" />
-        连接钱包
-      </Button>
+      {/* 使用ConnectKit的钱包连接 */}
+      <ConnectKitButton.Custom>
+        {({ isConnected, isConnecting, show, truncatedAddress, ensName }) => {
+          return (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={show}
+              disabled={isConnecting}
+            >
+              <Wallet className="h-4 w-4 mr-2" />
+              {isConnected ? (truncatedAddress || ensName) : (isConnecting ? '连接中...' : '连接钱包')}
+            </Button>
+          );
+        }}
+      </ConnectKitButton.Custom>
+      
       <Button 
         variant="ghost" 
         size="sm"
