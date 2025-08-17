@@ -1,18 +1,20 @@
-import { MainLayout } from '@/components/layout/MainLayout';
+import { Navbar } from '@/components/web3/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Edit3 } from 'lucide-react';
 
 interface EditorPageProps {
-  params: {
+  params: Promise<{
     modelId: string;
-  };
+  }>;
 }
 
-export default function EditorPage({ params }: EditorPageProps) {
+export default async function EditorPage({ params }: EditorPageProps) {
+  const { modelId } = await params;
   return (
-    <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         <div className="text-center space-y-4">
           <Badge variant="secondary" className="text-sm">
             <Edit3 className="mr-2 h-4 w-4" />
@@ -22,7 +24,7 @@ export default function EditorPage({ params }: EditorPageProps) {
             3D 模型编辑器
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            编辑和优化模型 {params.modelId}
+            编辑和优化模型 {modelId}
           </p>
         </div>
 
@@ -35,11 +37,11 @@ export default function EditorPage({ params }: EditorPageProps) {
               3D 模型编辑器功能正在开发中，敬请期待...
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              模型 ID: {params.modelId}
+              模型 ID: {modelId}
             </p>
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }

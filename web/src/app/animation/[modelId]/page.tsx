@@ -1,18 +1,20 @@
-import { MainLayout } from '@/components/layout/MainLayout';
+import { Navbar } from '@/components/web3/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Play } from 'lucide-react';
 
 interface AnimationPageProps {
-  params: {
+  params: Promise<{
     modelId: string;
-  };
+  }>;
 }
 
-export default function AnimationPage({ params }: AnimationPageProps) {
+export default async function AnimationPage({ params }: AnimationPageProps) {
+  const { modelId } = await params;
   return (
-    <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         <div className="text-center space-y-4">
           <Badge variant="secondary" className="text-sm">
             <Play className="mr-2 h-4 w-4" />
@@ -22,7 +24,7 @@ export default function AnimationPage({ params }: AnimationPageProps) {
             3D 模型动画
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            为模型 {params.modelId} 添加动画效果
+            为模型 {modelId} 添加动画效果
           </p>
         </div>
 
@@ -35,11 +37,11 @@ export default function AnimationPage({ params }: AnimationPageProps) {
               3D 模型动画功能正在开发中，敬请期待...
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              模型 ID: {params.modelId}
+              模型 ID: {modelId}
             </p>
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }

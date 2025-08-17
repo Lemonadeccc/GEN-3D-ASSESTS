@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useTextTo3D, useTaskStatus } from '@/hooks/use-meshy';
-import { TestModel3DViewer } from '@/components/3d/TestModel3DViewer';
+import { TaskStatusResponse } from '@/lib/meshy/types';
+import { SimpleModel3DViewer } from '@/components/3d/SimpleModel3DViewer';
 import { Sparkles, Loader2, Eye } from 'lucide-react';
 
 export default function APITestPage() {
@@ -14,7 +15,7 @@ export default function APITestPage() {
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   
   const textTo3DMutation = useTextTo3D();
-  const { data: taskStatus } = useTaskStatus(currentTaskId);
+  const { data: taskStatus } = useTaskStatus(currentTaskId) as { data: TaskStatusResponse | undefined };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -161,9 +162,7 @@ export default function APITestPage() {
                       {taskStatus.model_urls.glb}
                     </code>
                   </div>
-                  <TestModel3DViewer 
-                    url={taskStatus.model_urls.glb} 
-                    format="GLB"
+                  <SimpleModel3DViewer
                     taskResult={taskStatus}
                   />
                 </CardContent>
@@ -187,9 +186,7 @@ export default function APITestPage() {
                       {taskStatus.model_urls.fbx}
                     </code>
                   </div>
-                  <TestModel3DViewer 
-                    url={taskStatus.model_urls.fbx} 
-                    format="FBX"
+                  <SimpleModel3DViewer
                     taskResult={taskStatus}
                   />
                 </CardContent>
@@ -213,9 +210,7 @@ export default function APITestPage() {
                       {taskStatus.model_urls.obj}
                     </code>
                   </div>
-                  <TestModel3DViewer 
-                    url={taskStatus.model_urls.obj} 
-                    format="OBJ"
+                  <SimpleModel3DViewer
                     taskResult={taskStatus}
                   />
                 </CardContent>

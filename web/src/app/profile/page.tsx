@@ -1,12 +1,16 @@
-import { MainLayout } from '@/components/layout/MainLayout';
+// 禁用静态生成
+export const dynamic = 'force-dynamic';
+
+import { Navbar } from '@/components/web3/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User } from 'lucide-react';
 
 export default function ProfilePage() {
   return (
-    <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         <div className="text-center space-y-4">
           <Badge variant="secondary" className="text-sm">
             <User className="mr-2 h-4 w-4" />
@@ -31,6 +35,6 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }

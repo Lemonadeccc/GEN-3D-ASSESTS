@@ -32,15 +32,9 @@ export function useBalance() {
     queryFn: () => {
       // 检查是否强制使用真实API
       const useRealAPI = process.env.NEXT_PUBLIC_USE_REAL_API === 'true';
-      const hasValidAPIKey =
-        process.env.NEXT_PUBLIC_MESHY_API_KEY &&
-        process.env.NEXT_PUBLIC_MESHY_API_KEY !== 'demo_key';
 
-      // 开发环境：只有明确设置使用真实API且有有效密钥时才使用真实API
-      if (
-        process.env.NODE_ENV === 'development' &&
-        (!useRealAPI || !hasValidAPIKey)
-      ) {
+      // 开发环境：只有明确设置使用真实API时才使用真实API
+      if (process.env.NODE_ENV === 'development' && !useRealAPI) {
         return meshyClient.mockBalance();
       }
       return meshyClient.getBalance();
@@ -76,11 +70,12 @@ export function useTaskStatus(taskId: string | null) {
       return meshyClient.getTaskStatus(taskId);
     },
     enabled: !!taskId,
-    refetchInterval: (data) => {
+    refetchInterval: (data: any) => {
       // 根据任务状态决定轮询间隔
       if (!data) return 3000;
 
-      switch (data.status) {
+      const taskData = data as unknown as TaskStatusResponse;
+      switch (taskData.status) {
         case 'SUCCEEDED':
         case 'FAILED':
           return false; // 停止轮询
@@ -217,10 +212,12 @@ export function useMultipleTasks(taskIds: string[]) {
       return meshyClient.getTaskStatus(taskId);
     },
     enabled: !!taskId,
-    refetchInterval: (data: TaskStatusResponse | undefined) => {
+    refetchInterval: (data: any) => {
+      // 根据任务状态决定轮询间隔
       if (!data) return 3000;
 
-      switch (data.status) {
+      const taskData = data as unknown as TaskStatusResponse;
+      switch (taskData.status) {
         case 'SUCCEEDED':
         case 'FAILED':
           return false;
@@ -360,11 +357,12 @@ export function useTextureTaskStatus(taskId: string | null) {
       return meshyClient.getTextureTaskStatus(taskId);
     },
     enabled: !!taskId,
-    refetchInterval: (data) => {
+    refetchInterval: (data: any) => {
       // 根据任务状态决定轮询间隔
       if (!data) return 3000;
 
-      switch (data.status) {
+      const taskData = data as unknown as TaskStatusResponse;
+      switch (taskData.status) {
         case 'SUCCEEDED':
         case 'FAILED':
           return false; // 停止轮询
@@ -394,5 +392,19 @@ export function useTextureTaskStatus(taskId: string | null) {
     },
     // 使用结构比较而不是引用比较
     structuralSharing: true,
+    // 添加数据稳定性检查，避免相同数据触发重新渲染
+    staleTime: 1000, // 1秒内的相同数据视为新鲜数据
+    // 成功数据缓存时间
+    gcTime: 5 * 60 * 1000, // 5分钟
+    // 添加重试逻辑，但限制重试次数
+    retry: (failureCount, error: any) => {
+      // 如果是401认证错误，不重试
+      if (error?.status === 401) return false;
+      // 最多重试2次
+      return failureCount < 2;
+    },
+    // 防止快速连续重新获取
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 }
