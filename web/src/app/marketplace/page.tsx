@@ -1,12 +1,19 @@
+'use client';
+
 // 禁用静态生成
 export const dynamic = 'force-dynamic';
 
+import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/web3/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Store } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { LayoutWrapper } from '@/components/layout/LayoutWrapper';
+import { TMarketplacePage } from '@/components/marketplace';
+import { Store, Box } from 'lucide-react';
 
-export default function MarketplacePage() {
+// Original Marketplace Page Component
+function OriginalMarketplacePage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -35,6 +42,54 @@ export default function MarketplacePage() {
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
+
+export default function MarketplacePage() {
+  const [useNewLayout, setUseNewLayout] = useState(false);
+
+  // Load layout preference from localStorage
+  useEffect(() => {
+    const savedLayout = localStorage.getItem('layout-preference');
+    if (savedLayout) {
+      setUseNewLayout(savedLayout === 'tStyle');
+    }
+  }, []);
+
+  // Toggle layout and save preference
+  const toggleLayout = () => {
+    const newLayoutState = !useNewLayout;
+    setUseNewLayout(newLayoutState);
+    localStorage.setItem('layout-preference', newLayoutState ? 'tStyle' : 'original');
+  };
+
+  // T-style layout
+  if (useNewLayout) {
+    return (
+      <LayoutWrapper defaultLayout="tStyle">
+        <TMarketplacePage />
+      </LayoutWrapper>
+    );
+  }
+
+  // Original layout with toggle button
+  return (
+    <div className="relative">
+      {/* Layout toggle button */}
+      <div className="fixed top-20 right-4 z-[9999]">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleLayout}
+          className="flex items-center gap-2 bg-background/90 backdrop-blur-sm shadow-lg border-2"
+        >
+          <Box className="h-4 w-4" />
+          T Design
+        </Button>
+      </div>
+      
+      <OriginalMarketplacePage />
     </div>
   );
 }

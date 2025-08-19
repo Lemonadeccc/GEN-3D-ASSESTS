@@ -1,11 +1,14 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/web3/Navbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNFTQuery } from '@/hooks/use-nft-query';
 import { useAccount } from 'wagmi';
+import { LayoutWrapper } from '@/components/layout/LayoutWrapper';
+import { TNFTPage } from '@/components/nft';
 import {
   Coins,
   ExternalLink,
@@ -14,7 +17,8 @@ import {
   Palette,
   Wallet,
   Loader2,
-  Package
+  Package,
+  Box
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -128,7 +132,8 @@ function NFTCard({ nft }: { nft: any }) {
   );
 }
 
-export default function NFTPage() {
+// Original NFT Page Component
+function OriginalNFTPage() {
   const { isConnected, address } = useAccount();
   const { userNFTs, balance, totalSupply, isLoading } = useNFTQuery();
 
@@ -256,6 +261,54 @@ export default function NFTPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+export default function NFTPage() {
+  const [useNewLayout, setUseNewLayout] = useState(false);
+
+  // Load layout preference from localStorage
+  useEffect(() => {
+    const savedLayout = localStorage.getItem('layout-preference');
+    if (savedLayout) {
+      setUseNewLayout(savedLayout === 'tStyle');
+    }
+  }, []);
+
+  // Toggle layout and save preference
+  const toggleLayout = () => {
+    const newLayoutState = !useNewLayout;
+    setUseNewLayout(newLayoutState);
+    localStorage.setItem('layout-preference', newLayoutState ? 'tStyle' : 'original');
+  };
+
+  // T-style layout
+  if (useNewLayout) {
+    return (
+      <LayoutWrapper defaultLayout="tStyle">
+        <TNFTPage />
+      </LayoutWrapper>
+    );
+  }
+
+  // Original layout with toggle button
+  return (
+    <div className="relative">
+      {/* Layout toggle button */}
+      <div className="fixed top-20 right-4 z-[9999]">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleLayout}
+          className="flex items-center gap-2 bg-background/90 backdrop-blur-sm shadow-lg border-2"
+        >
+          <Box className="h-4 w-4" />
+          T Design
+        </Button>
+      </div>
+      
+      <OriginalNFTPage />
     </div>
   );
 }
