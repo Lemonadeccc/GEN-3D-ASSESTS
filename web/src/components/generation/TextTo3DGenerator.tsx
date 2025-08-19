@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useBalance, useTextTo3D, useTaskStatus } from '@/hooks/use-meshy';
-import { TextTo3DParams, TaskStatusResponse } from '@/lib/meshy/types';
+import { TextTo3DParams } from '@/lib/meshy/types';
 import { calculateCost, estimateGenerationTime } from '@/lib/meshy/config';
 import { ClientSideModel3DViewer } from '@/components/3d/ClientSideModel3DViewer';
 import { storage } from '@/lib/storage';
@@ -46,13 +46,11 @@ export function TextTo3DGenerator({ onTaskCreated }: GeneratorProps) {
   const [symmetryMode, setSymmetryMode] = useState<'off' | 'auto' | 'on'>('auto');
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [previewTaskId, setPreviewTaskId] = useState<string | null>(null);
-  const [lastGenerateTime, setLastGenerateTime] = useState<number>(0);
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
   
   // Hooks
   const { data: balance, isLoading: balanceLoading } = useBalance();
   const textTo3DMutation = useTextTo3D();
-  const { data: taskStatus } = useTaskStatus(currentTaskId) as { data: TaskStatusResponse | undefined };
+  const { data: taskStatus } = useTaskStatus(currentTaskId);
 
   // 在客户端挂载时从localStorage恢复状态
   useEffect(() => {
@@ -98,25 +96,8 @@ export function TextTo3DGenerator({ onTaskCreated }: GeneratorProps) {
     }
   }, [taskStatus, currentTaskId]);
 
-  const handleGenerate = useCallback(async () => {
+  const handleGenerate = async () => {
     if (!prompt.trim()) return;
-    
-    const now = Date.now();
-    const debounceMs = 2000; // 2秒防抖
-    
-    // 防止重复提交和快速点击
-    if (textTo3DMutation.isPending || isGenerating) {
-      console.log('🚫 Generation already in progress, ignoring duplicate request');
-      return;
-    }
-    
-    if (now - lastGenerateTime < debounceMs) {
-      console.log('🚫 Generation too frequent, ignoring request (debounce)');
-      return;
-    }
-    
-    setLastGenerateTime(now);
-    setIsGenerating(true);
     
     const params: TextTo3DParams = {
       mode,
@@ -134,7 +115,7 @@ export function TextTo3DGenerator({ onTaskCreated }: GeneratorProps) {
     }
 
     // 调试日志：检查参数
-    console.log('🚀 Starting generation with params:', {
+    console.log('Generate params:', {
       mode,
       prompt: prompt.trim(),
       art_style: artStyle,
@@ -143,7 +124,6 @@ export function TextTo3DGenerator({ onTaskCreated }: GeneratorProps) {
       target_polycount: targetPolycount,
       symmetry_mode: symmetryMode,
       preview_task_id: params.preview_task_id,
-      timestamp: new Date().toISOString(),
     });
 
     try {
@@ -151,7 +131,7 @@ export function TextTo3DGenerator({ onTaskCreated }: GeneratorProps) {
       const taskId = result.result;
       
       // 🔥 清除旧任务数据，设置新任务
-      console.log('🔥 Generation started successfully, task ID:', taskId);
+      console.log('🔥 Starting new generation, clearing old data');
       setCurrentTaskId(taskId);
       storage.saveCurrentTask(taskId);
       
@@ -163,11 +143,9 @@ export function TextTo3DGenerator({ onTaskCreated }: GeneratorProps) {
       
       onTaskCreated?.(taskId);
     } catch (error) {
-      console.error('❌ Generation failed:', error);
-    } finally {
-      setIsGenerating(false);
+      console.error('Generation failed:', error);
     }
-  }, [prompt, mode, artStyle, aiModel, topology, targetPolycount, symmetryMode, previewTaskId, textTo3DMutation, onTaskCreated, lastGenerateTime, isGenerating]);
+  };
 
   const cost = calculateCost(mode);
   const estimatedTime = estimateGenerationTime(mode, targetPolycount);
@@ -361,11 +339,11 @@ export function TextTo3DGenerator({ onTaskCreated }: GeneratorProps) {
           {/* 生成按钮 */}
           <Button 
             onClick={handleGenerate}
-            disabled={!canGenerate || textTo3DMutation.isPending || isGenerating}
+            disabled={!canGenerate || textTo3DMutation.isPending}
             className="w-full"
             size="lg"
           >
-            {(textTo3DMutation.isPending || isGenerating) ? (
+            {textTo3DMutation.isPending ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                 生成中...

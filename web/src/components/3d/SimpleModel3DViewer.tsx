@@ -2,7 +2,8 @@
 
 import { Suspense, useRef, useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Environment, useGLTF } from '@react-three/drei';
+import { OrbitControls, Environment } from '@react-three/drei';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,133 +22,48 @@ import {
   Box,
   Info,
   AlertTriangle,
-  Palette,
-  Coins
+  Palette
 } from 'lucide-react';
 import { TaskStatusResponse } from '@/lib/meshy/types';
 import { useModelDownload } from '@/hooks/use-model-download';
 import { useTextToTexture, useTextureTaskStatus } from '@/hooks/use-meshy';
 import { storage } from '@/lib/storage';
-import { logger } from '@/lib/logger';
-import { NFTMintDialog } from '@/components/web3/NFTMintDialog';
 
-// GLB模型组件，接口返回后直接下载和展示
+// 使用memo包装3D模型组件避免重渲染
 const SimpleGLBModel = memo(function SimpleGLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
-  const modelRef = useRef<any>(null);
-  const [loadingState, setLoadingState] = useState<'loading' | 'loaded' | 'error'>('loading');
-  
-  // 稳定的URL作为useGLTF的参数
-  const stableUrl = useMemo(() => url, [url]);
-  
-  // 使用useGLTF hook - 在组件顶层调用的更安全方式
-  let gltf: any = null;
-  let hookError: any = null;
-  
-  try {
-    if (stableUrl) {
-      // useGLTF可能抛出Promise错误，我们需要捕获它
-      gltf = useGLTF(stableUrl);
-    }
-  } catch (error) {
-    hookError = error;
-    
-    // 检查是否是Promise错误（Three.js加载失败时会抛出Promise）
-    if (error && typeof (error as any)?.then === 'function') {
-      // 这是一个Promise错误，等待Promise解决以获取真实错误
-      (error as Promise<any>).catch((promiseError) => {
-        const errorInfo = {
-          url: stableUrl,
-          errorType: typeof promiseError,
-          errorMessage: promiseError instanceof Error ? promiseError.message : String(promiseError),
-          originalError: promiseError,
-          promiseResolved: true
-        };
-        logger.error('GLB模型Promise加载失败:', errorInfo);
-        onError(new Error(`GLB文件加载失败: ${promiseError instanceof Error ? promiseError.message : '文件可能损坏或不兼容'}`));
-      });
-    } else {
-      // 常规错误处理
-      const errorInfo = {
-        url: stableUrl,
-        errorType: typeof error,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        isPromiseError: error && typeof (error as any)?.then === 'function',
-        stack: error instanceof Error ? error.stack?.substring(0, 200) : undefined
-      };
-      logger.error('useGLTF hook调用失败:', errorInfo);
-      onError(new Error(`GLB加载失败: ${error instanceof Error ? error.message : '未知错误'}`));
-    }
-  }
-  
-  // 处理加载成功
-  useEffect(() => {
-    if (gltf && gltf.scene && !hookError && loadingState !== 'loaded') {
-      setLoadingState('loaded');
-      logger.info('GLB模型加载成功:', { url: stableUrl, sceneChildren: gltf.scene.children?.length || 0 });
-      onLoad();
-    }
-  }, [gltf, gltf?.scene, hookError, onLoad, stableUrl, loadingState]);
-  
-  // 处理加载错误
-  useEffect(() => {
-    if (hookError && loadingState !== 'error') {
-      setLoadingState('error');
-      
-      // 如果是Promise错误，我们已经在catch中处理了，这里不需要重复处理
-      if (hookError && typeof (hookError as any)?.then === 'function') {
-        return; // Promise错误已在上面的catch中处理
-      }
-      
-      // 处理非Promise错误
-      let errorMessage = '模型加载失败';
-      let errorCode = 'UNKNOWN_ERROR';
-      
-      if (hookError) {
-        if (typeof hookError === 'string') {
-          errorMessage = hookError;
-          errorCode = 'STRING_ERROR';
-        } else if (hookError instanceof Error) {
-          errorMessage = hookError.message || hookError.name || '未知GLTF加载错误';
-          errorCode = hookError.name || 'ERROR_INSTANCE';
-        } else if (hookError.message && hookError.message !== '{}') {
-          errorMessage = hookError.message;
-          errorCode = 'MESSAGE_PROPERTY';
-        } else if (hookError.type) {
-          errorMessage = `网络错误: ${hookError.type}`;
-          errorCode = 'NETWORK_ERROR';
-        } else if (hookError.status) {
-          errorMessage = `HTTP错误: ${hookError.status}`;
-          errorCode = 'HTTP_ERROR';
-        } else {
-          errorMessage = `模型加载失败 - URL: ${stableUrl?.substring(0, 100)}${stableUrl?.length > 100 ? '...' : ''}`;
-          errorCode = 'FORMAT_ERROR';
-        }
-      }
-      
-      const errorDetails = {
-        url: stableUrl,
-        errorMessage,
-        errorCode,
-        errorType: typeof hookError,
-        isErrorInstance: hookError instanceof Error,
-        hasValidUrl: !!(stableUrl && stableUrl.length > 0),
-        urlValid: stableUrl ? stableUrl.startsWith('http') || stableUrl.startsWith('blob:') : false
-      };
-      
-      logger.error('GLB模型加载失败:', errorDetails);
-      onError(new Error(errorMessage));
-    }
-  }, [hookError, onError, stableUrl, loadingState]);
+  const modelRef = useRef<any>();
+  const [gltf, setGltf] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // 自动旋转
+  useEffect(() => {
+    const loader = new GLTFLoader();
+    
+    loader.load(
+      url,
+      (loadedGltf) => {
+        console.log('GLB loaded successfully with native loader:', url);
+        setGltf(loadedGltf);
+        setLoading(false);
+        onLoad();
+      },
+      (progress) => {
+        console.log('GLB loading progress:', (progress.loaded / progress.total) * 100 + '%');
+      },
+      (error) => {
+        console.error('GLB loading failed with native loader:', error);
+        setLoading(false);
+        onError(error);
+      }
+    );
+  }, [url, onLoad, onError]);
+
   useFrame(() => {
-    if (modelRef.current && loadingState === 'loaded') {
+    if (modelRef.current) {
       modelRef.current.rotation.y += 0.01;
     }
   });
 
-  // 只有加载成功才渲染模型
-  if (loadingState !== 'loaded' || !gltf?.scene) {
+  if (loading || !gltf) {
     return null;
   }
 
@@ -262,7 +178,7 @@ const TextureDialog = memo(function TextureDialog({
 
 // 后备模型
 function FallbackModel() {
-  const meshRef = useRef<any>(null);
+  const meshRef = useRef<any>();
 
   useFrame(() => {
     if (meshRef.current) {
@@ -288,64 +204,29 @@ const Model3DCanvas = memo(function Model3DCanvas({
   onModelLoad: () => void; 
   onModelError: (error: any) => void;
 }) {
-  // 稳定化回调避免重渲染
-  const stableOnLoad = useCallback(onModelLoad, []);
-  const stableOnError = useCallback(onModelError, []);
-  
-  // 稳定化相机配置
-  const cameraConfig = useMemo(() => ({ 
-    position: [0, 0, 5] as [number, number, number], 
-    fov: 45 
-  }), []);
-  
-  // 稳定化光照配置
-  const lightingSetup = useMemo(() => ({
-    ambient: { intensity: 0.6 },
-    directional: { position: [10, 10, 5] as [number, number, number], intensity: 1 },
-    point: { position: [-10, -10, -5] as [number, number, number], intensity: 0.5 }
-  }), []);
-  
   return (
     <Canvas
-      camera={cameraConfig}
+      camera={{ position: [0, 0, 5], fov: 45 }}
       className="rounded-lg"
-      gl={{ 
-        antialias: true
-      }}
       onCreated={({ gl }) => {
-        gl.setPixelRatio(Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2));
-        gl.shadowMap.enabled = true;
-        gl.shadowMap.type = (gl as any).PCFSoftShadowMap;
-        logger.debug('3D Canvas创建成功');
+        gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        console.log('Simple Canvas created successfully');
       }}
       onError={(error) => {
-        logger.error('Canvas渲染错误:', error);
+        console.error('Simple Canvas error:', error);
       }}
     >
-      <ambientLight intensity={lightingSetup.ambient.intensity} />
-      <directionalLight 
-        position={lightingSetup.directional.position} 
-        intensity={lightingSetup.directional.intensity}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-      />
-      <pointLight 
-        position={lightingSetup.point.position} 
-        intensity={lightingSetup.point.intensity} 
-      />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[10, 10, 5]} intensity={1} />
+      <pointLight position={[-10, -10, -5]} intensity={0.5} />
       
       <Suspense fallback={<FallbackModel />}>
         {localModelUrl ? (
-          <SimpleGLBModel 
-            url={localModelUrl} 
-            onLoad={stableOnLoad} 
-            onError={stableOnError} 
-          />
+          <SimpleGLBModel url={localModelUrl} onLoad={onModelLoad} onError={onModelError} />
         ) : (
           <FallbackModel />
         )}
-        <Environment preset="city" background={false} />
+        <Environment preset="city" />
       </Suspense>
       
       <OrbitControls
@@ -354,23 +235,17 @@ const Model3DCanvas = memo(function Model3DCanvas({
         enableRotate={true}
         dampingFactor={0.05}
         screenSpacePanning={false}
-        maxDistance={10}
-        minDistance={2}
       />
     </Canvas>
   );
-}, (prevProps, nextProps) => {
-  // 自定义比较函数，只有URL真正改变时才重新渲染Canvas
-  return prevProps.localModelUrl === nextProps.localModelUrl;
 });
 
 interface SimpleModel3DViewerProps {
   taskResult: TaskStatusResponse;
   className?: string;
-  autoDownload?: boolean; // 新增：控制是否自动下载
 }
 
-export function SimpleModel3DViewer({ taskResult, className, autoDownload = true }: SimpleModel3DViewerProps) {
+export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DViewerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [loadStatus, setLoadStatus] = useState<'idle' | 'downloading' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -455,9 +330,9 @@ export function SimpleModel3DViewer({ taskResult, className, autoDownload = true
   
   // 纹理生成 hooks
   const textToTextureMutation = useTextToTexture();
-  const { data: textureTaskStatus } = useTextureTaskStatus(textureTaskId) as { data: TaskStatusResponse | undefined };
+  const { data: textureTaskStatus } = useTextureTaskStatus(textureTaskId);
   
-  // 记忆化纹理任务状态，只有关键字段变化时才重新计算 - 增加防抖
+  // 记忆化纹理任务状态，只有关键字段变化时才重新计算
   const memoizedTextureStatus = useMemo(() => {
     if (!textureTaskStatus) return null;
     
@@ -496,71 +371,58 @@ export function SimpleModel3DViewer({ taskResult, className, autoDownload = true
       // 🚫 不要保存纹理任务数据到 lastSuccessfulModel，避免覆盖主任务
       // storage.saveLastSuccessfulModel(memoizedTextureStatus); // 删除这行
       
-      // 只有当URL真正改变且不在下载中时才重新加载
-      if (newModelUrl !== currentLoadedUrl && loadStatus !== 'downloading') {
-        logger.info('✅ 纹理生成完成，准备加载新模型:', newModelUrl);
+      // 只有当URL真正改变时才重新加载
+      if (newModelUrl !== currentLoadedUrl) {
+        console.log('✅ 纹理生成完成，新模型URL:', newModelUrl);
         
-        // 🎯 设置一个小延迟避免与纹理请求冲突导致的闪烁
-        setTimeout(() => {
-          // 再次检查状态，防止在延迟期间开始了其他下载
-          if (loadStatus !== 'downloading') {
-            // 清理当前模型
-            if (localModelUrl) {
-              URL.revokeObjectURL(localModelUrl);
-            }
-            
-            // 下载新的纹理模型
-            setLocalModelUrl(null);
-            setLoadStatus('idle');
-            setCurrentLoadedUrl(newModelUrl); // 记录新的URL
-            handleDownloadAndLoad(newModelUrl);
-          }
-        }, 300); // 300ms延迟避免闪烁
+        // 清理当前模型
+        if (localModelUrl) {
+          URL.revokeObjectURL(localModelUrl);
+        }
+        
+        // 下载新的纹理模型
+        setLocalModelUrl(null);
+        setLoadStatus('idle');
+        setCurrentLoadedUrl(newModelUrl); // 记录新的URL
+        handleDownloadAndLoad(newModelUrl);
       } else {
-        logger.debug('模型URL未改变，跳过重新加载');
+        console.log('模型URL未改变，跳过重新加载');
       }
     }
   }, [
     // 只监听真正影响模型加载的字段
-    memoizedTextureStatus?.status, 
+    memoizedTextureStatus?.status === 'SUCCEEDED', 
     memoizedTextureStatus?.model_urls?.glb, 
     currentLoadedUrl
   ]);
 
-  // 条件性自动下载GLB模型（仅在autoDownload为true且初始化时触发）
+  // 自动下载GLB模型
   useEffect(() => {
-    if (autoDownload && bestModel && !localModelUrl && loadStatus === 'idle' && !memoizedTextureStatus && !currentLoadedUrl) {
-      console.log('🚀 Initial model download triggered for:', bestModel.url);
+    if (bestModel && !localModelUrl && loadStatus === 'idle' && !memoizedTextureStatus && !currentLoadedUrl) {
       setCurrentLoadedUrl(bestModel.url); // 记录初始URL
       handleDownloadAndLoad(bestModel.url);
     }
-  }, [autoDownload, bestModel, localModelUrl, loadStatus, memoizedTextureStatus, currentLoadedUrl]);
+  }, [bestModel, localModelUrl, loadStatus, memoizedTextureStatus, currentLoadedUrl]);
 
   const handleDownloadAndLoad = async (url: string) => {
-    // 防止重复下载
-    if (loadStatus === 'downloading') {
-      console.log('🚫 Download already in progress for URL:', url);
-      return;
-    }
-    
     setLoadStatus('downloading');
     setErrorMessage('');
     
-    console.log('📡 Starting direct download for GLB model:', { url, taskId: taskResult.id });
+    console.log('Starting download for GLB model:', { url, taskId: taskResult.id });
     
     try {
       const blobUrl = await downloadModel(url, 'GLB');
       if (blobUrl) {
-        console.log('✅ Download completed, setting model URL:', blobUrl);
+        console.log('Download successful, blob URL created:', blobUrl);
         setLocalModelUrl(blobUrl);
         setLoadStatus('loading');
       } else {
-        console.error('❌ Download failed: no blob URL returned');
+        console.error('Download failed: no blob URL returned');
         setLoadStatus('error');
         setErrorMessage('下载失败');
       }
     } catch (error: any) {
-      console.error('❌ Download error:', error);
+      console.error('Download error:', error);
       setLoadStatus('error');
       setErrorMessage(error.message || '下载失败');
     }
@@ -572,70 +434,13 @@ export function SimpleModel3DViewer({ taskResult, className, autoDownload = true
 
   const handleModelError = useCallback((error: any) => {
     setLoadStatus('error');
-    
-    // 增强的错误信息提取
-    let errorMsg = '模型加载失败';
-    let errorCode = 'UNKNOWN';
-    let diagnosticInfo = {};
-    
-    if (error) {
-      if (typeof error === 'string') {
-        errorMsg = error;
-        errorCode = 'STRING_ERROR';
-      } else if (error instanceof Error) {
-        errorMsg = error.message || error.name || '未知Error对象';
-        errorCode = error.name || 'ERROR_OBJECT';
-        diagnosticInfo = {
-          stack: error.stack?.substring(0, 300),
-          cause: error.cause
-        };
-      } else if (error.message && error.message !== '{}') {
-        errorMsg = error.message;
-        errorCode = 'MESSAGE_PROPERTY';
-      } else if (error.status || error.statusText) {
-        errorMsg = `网络错误: ${error.status} ${error.statusText}`;
-        errorCode = 'NETWORK_ERROR';
-        diagnosticInfo = { status: error.status, statusText: error.statusText };
-      } else if (error.type) {
-        errorMsg = `加载错误: ${error.type}`;
-        errorCode = 'TYPE_ERROR';
-        diagnosticInfo = { type: error.type };
-      } else if (typeof error.toString === 'function') {
-        const strError = error.toString();
-        if (strError !== '[object Object]' && strError !== '{}') {
-          errorMsg = strError;
-          errorCode = 'TOSTRING_METHOD';
-        } else {
-          // 针对空对象的特殊处理
-          errorMsg = '模型加载失败：未知错误（空对象）';
-          errorCode = 'EMPTY_OBJECT_ERROR';
-          diagnosticInfo = {
-            objectKeys: Object.keys(error || {}),
-            objectType: Object.prototype.toString.call(error),
-            hasOwnProperties: Object.getOwnPropertyNames(error || {})
-          };
-        }
-      }
-    }
-    
+    const errorMsg = error?.message || '模型加载失败';
     setErrorMessage(errorMsg);
-    
-    // 结构化错误日志，避免空对象
-    const errorDetails = {
-      errorMessage: errorMsg,
-      errorCode,
-      errorType: typeof error,
-      isErrorInstance: error instanceof Error,
-      hasMessage: !!(error?.message),
-      hasName: !!(error?.name),
-      hasStack: !!(error?.stack),
+    console.error('Model loading error details:', {
+      error,
       localModelUrl: modelInfoRef.current.localModelUrl,
-      taskId: modelInfoRef.current.taskId,
-      timestamp: new Date().toISOString(),
-      diagnosticInfo
-    };
-    
-    logger.error('3D模型加载错误详情:', errorDetails);
+      taskResult: modelInfoRef.current.taskId
+    });
   }, []); // 移除所有依赖，使用ref中的值
 
   // 获取当前应该使用的模型URL（优先使用纹理生成的新模型）
@@ -665,12 +470,12 @@ export function SimpleModel3DViewer({ taskResult, className, autoDownload = true
       if (result.result) {
         setTextureTaskId(result.result);
         storage.saveTextureTaskId(result.result); // 保存到localStorage
-        logger.info('纹理生成任务启动:', result.result);
+        console.log('纹理生成任务启动:', result.result);
       }
       
       setShowRetextureDialog(false);
     } catch (error) {
-      logger.error('纹理生成启动失败:', error);
+      console.error('纹理生成启动失败:', error);
     }
   }, [currentModelUrl, texturePrompt, negativePrompt, enablePbr, textToTextureMutation]);
 
@@ -683,38 +488,6 @@ export function SimpleModel3DViewer({ taskResult, className, autoDownload = true
             <p className="text-muted-foreground">暂无3D模型</p>
             <p className="text-xs text-muted-foreground">需要GLB格式</p>
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // 如果没有开启自动下载且没有本地模型，显示预览按钮
-  if (!autoDownload && !localModelUrl && loadStatus === 'idle') {
-    return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Box className="h-5 w-5" />
-            <span>3D 模型预览</span>
-            <Badge variant="outline">GLB</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center h-64 space-y-4">
-          <Eye className="h-16 w-16 text-muted-foreground" />
-          <div className="text-center space-y-2">
-            <p className="font-medium">点击预览 3D 模型</p>
-            <p className="text-sm text-muted-foreground">
-              格式: GLB | 大小: 预计 2-10MB
-            </p>
-          </div>
-          <Button 
-            onClick={() => handleDownloadAndLoad(bestModel.url)}
-            disabled={loadStatus !== 'idle'}
-            className="flex items-center space-x-2"
-          >
-            <Eye className="h-4 w-4" />
-            <span>开始预览</span>
-          </Button>
         </CardContent>
       </Card>
     );
@@ -734,17 +507,10 @@ export function SimpleModel3DViewer({ taskResult, className, autoDownload = true
               <Loader2 className="h-4 w-4 animate-spin" />
               <span className="text-sm">下载 GLB 模型中...</span>
             </div>
-            <div className="text-xs text-muted-foreground">
-              正在从 Meshy 服务器下载模型文件，请耐心等待...
+            <Progress value={downloadState.progress} className="w-full" />
+            <div className="text-xs text-muted-foreground mt-1">
+              {Math.round(downloadState.progress)}%
             </div>
-            {downloadState.progress > 0 && (
-              <>
-                <Progress value={downloadState.progress} className="w-full mt-2" />
-                <div className="text-xs text-muted-foreground mt-1">
-                  {Math.round(downloadState.progress)}%
-                </div>
-              </>
-            )}
           </div>
         </div>
       )}
@@ -762,9 +528,8 @@ export function SimpleModel3DViewer({ taskResult, className, autoDownload = true
         </div>
       )}
 
-      {/* 3D Canvas - 使用key属性防止不必要的重新挂载 */}
+      {/* 3D Canvas */}
       <Model3DCanvas 
-        key={`canvas-${taskResult.id}-${currentLoadedUrl}`}
         localModelUrl={localModelUrl}
         onModelLoad={handleModelLoad}
         onModelError={handleModelError}
@@ -802,21 +567,6 @@ export function SimpleModel3DViewer({ taskResult, className, autoDownload = true
           >
             <Palette className="h-4 w-4" />
           </Button>
-          
-          <NFTMintDialog
-            taskResult={taskResult}
-            trigger={
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                title="铸造NFT"
-                disabled={!taskResult.model_urls?.glb}
-              >
-                <Coins className="h-4 w-4" />
-              </Button>
-            }
-          />
           
           <Button
             variant="ghost"

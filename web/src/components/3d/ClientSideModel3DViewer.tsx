@@ -7,10 +7,9 @@ import { TaskStatusResponse } from '@/lib/meshy/types';
 interface ClientSideModel3DViewerProps {
   taskResult: TaskStatusResponse;
   className?: string;
-  autoDownload?: boolean; // 新增：控制是否自动下载
 }
 
-export function ClientSideModel3DViewer({ taskResult, className, autoDownload = false }: ClientSideModel3DViewerProps) {
+export function ClientSideModel3DViewer({ taskResult, className }: ClientSideModel3DViewerProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -28,5 +27,5 @@ export function ClientSideModel3DViewer({ taskResult, className, autoDownload = 
     );
   }
 
-  return <SimpleModel3DViewer taskResult={taskResult} className={className} autoDownload={autoDownload} />;
+  return <SimpleModel3DViewer taskResult={taskResult} className={className} />;
 }
