@@ -10,12 +10,14 @@ import {
   Sparkles, 
   User, 
   ShoppingBag,
-  TestTube
+  TestTube,
+  Coins
 } from 'lucide-react';
 
 const navigation = [
   { name: '首页', href: '/', icon: 'Home' },
   { name: 'AI生成', href: '/generate', icon: 'Sparkles' },
+  { name: '我的NFT', href: '/nft', icon: 'Coins' },
   { name: '我的资产', href: '/profile', icon: 'User' },
   { name: 'NFT市场', href: '/marketplace', icon: 'ShoppingBag' },
   { name: 'SDK测试', href: '/meshy-test', icon: 'TestTube', badge: 'SDK' },
@@ -29,6 +31,7 @@ const iconMap = {
   User,
   ShoppingBag,
   TestTube,
+  Coins,
 };
 
 export function NavigationMenu() {
