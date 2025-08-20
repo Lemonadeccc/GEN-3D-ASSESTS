@@ -226,13 +226,13 @@ export default function HomePage() {
   // 否则返回原版布局，但添加切换按钮
   return (
     <div className="relative">
-      {/* 布局切换按钮 - 固定在右上角，避开导航栏 */}
-      <div className="fixed top-20 right-4 z-[9999]">
+      {/* 布局切换按钮 - 固定在右上角 */}
+      <div className="fixed top-4 right-4 z-50">
         <Button
           variant="outline"
           size="sm"
           onClick={toggleLayout}
-          className="flex items-center gap-2 bg-background/90 backdrop-blur-sm shadow-lg border-2"
+          className="flex items-center gap-2 bg-background/80 backdrop-blur-sm"
         >
           <Box className="h-4 w-4" />
           T设计

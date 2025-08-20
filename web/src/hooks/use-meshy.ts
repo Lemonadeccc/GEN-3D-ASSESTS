@@ -162,7 +162,7 @@ export function useTextTo3D() {
       queryClient.invalidateQueries({ queryKey: meshyQueries.balance() });
 
       toast.success('生成任务已启动', {
-        description: `任务ID: ${taskId}`,
+        description: `Task ID: ${taskId.slice(0, 8)}...`,
       });
     },
     onError: (error: any, variables, context) => {
@@ -321,7 +321,7 @@ export function useTextToTexture() {
       queryClient.invalidateQueries({ queryKey: meshyQueries.balance() });
 
       toast.success('纹理生成任务已启动', {
-        description: `任务ID: ${taskId}`,
+        description: `Task ID: ${taskId.slice(0, 8)}...`,
       });
     },
     onError: (error: any, variables, context) => {

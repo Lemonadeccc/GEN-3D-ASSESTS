@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   PREVIEW_TASK_ID: 'meshy_preview_task_id',
   TEXTURE_TASK_ID: 'meshy_texture_task_id',
   LAST_SUCCESSFUL_MODEL: 'meshy_last_model',
+  GENERATION_HISTORY: 'meshy_generation_history',
 } as const;
 
 // 检查是否在客户端环境
@@ -100,6 +101,30 @@ export const storage = {
     } catch (e) {
       console.error('Failed to get model data:', e);
       return null;
+    }
+  },
+
+  // 保存生成历史
+  saveGenerationHistory(history: string[]): void {
+    if (!isClient) return;
+    try {
+      // 只保留最近50个
+      const limitedHistory = history.slice(-50);
+      localStorage.setItem(STORAGE_KEYS.GENERATION_HISTORY, JSON.stringify(limitedHistory));
+    } catch (e) {
+      console.error('Failed to save generation history:', e);
+    }
+  },
+
+  // 获取生成历史 - SSR安全
+  getGenerationHistory(): string[] {
+    if (!isClient) return [];
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.GENERATION_HISTORY);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      console.error('Failed to get generation history:', e);
+      return [];
     }
   },
 
