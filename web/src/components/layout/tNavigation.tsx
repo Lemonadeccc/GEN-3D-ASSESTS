@@ -16,6 +16,7 @@ import {
 import { LogOut, Settings, Coins, User, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
 
+
 interface TNavigationProps {
   onToggleLayout?: () => void;
   useNewLayout?: boolean;
@@ -23,6 +24,7 @@ interface TNavigationProps {
 
 export function TNavigation({ onToggleLayout, useNewLayout = false }: TNavigationProps) {
   const { address, isConnected, connector } = useAccount();
+
   const { disconnect } = useDisconnect();
 
   const formatAddress = (address: string) => {
@@ -91,6 +93,7 @@ export function TNavigation({ onToggleLayout, useNewLayout = false }: TNavigatio
                   <div className="h-2 w-2 rounded-full bg-green-600"></div>
                 </div>
               </div>
+
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
@@ -98,6 +101,7 @@ export function TNavigation({ onToggleLayout, useNewLayout = false }: TNavigatio
                   <p className="text-sm font-medium leading-none">
                     {connector?.name || '我的钱包'}
                   </p>
+
                   <p className="text-xs leading-none text-muted-foreground">
                     {formatAddress(address)}
                   </p>
@@ -123,6 +127,7 @@ export function TNavigation({ onToggleLayout, useNewLayout = false }: TNavigatio
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={handleDisconnect}
+
                 className="flex items-center text-red-600"
               >
                 <LogOut className="mr-2 h-4 w-4" />
