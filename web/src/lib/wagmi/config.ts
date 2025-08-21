@@ -9,18 +9,28 @@ import { metaMask, walletConnect, coinbaseWallet, injected } from 'wagmi/connect
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 const sepoliaRpcUrl = process.env.NEXT_PUBLIC_RPC_URL_SEPOLIA || 'https://sepolia.drpc.org';
 
-// 构建连接器数组
+// 动态获取应用URL
+const getAppUrl = () => {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  // 服务端渲染时的默认值
+  return process.env.NEXT_PUBLIC_APP_URL || 'https://gen3d.app';
+};
+
+// 构建连接器数组 - 支持MetaMask的多种连接方式
 const connectors = [
-  // 首先添加injected connector作为MetaMask的首选方式
-  injected({
-    target: 'metaMask',
-  }),
-  // 保留metaMask connector作为备选
+  // MetaMask - 专用连接器（用于移动端和深度集成）
   metaMask({
     dappMetadata: {
-      name: 'GEN-3D-ASSETS',
-      url: 'http://localhost:3000',
+      name: 'GEN-3D-ASSETS', 
+      url: getAppUrl(),
+      iconUrl: `${getAppUrl()}/favicon.ico`,
     },
+  }),
+  // 通用注入钱包连接器（用于浏览器插件）
+  injected({
+    shimDisconnect: true,
   }),
 ];
 
@@ -32,9 +42,10 @@ if (projectId && projectId !== 'development_project_id_placeholder') {
       metadata: {
         name: 'GEN-3D-ASSETS',
         description: 'AI-powered 3D NFT Platform',
-        url: 'http://localhost:3000',
-        icons: ['http://localhost:3000/favicon.ico'],
+        url: getAppUrl(),
+        icons: [`${getAppUrl()}/favicon.ico`],
       },
+      showQrModal: true, // 启用二维码模态框
     })
   );
 }
@@ -43,7 +54,7 @@ if (projectId && projectId !== 'development_project_id_placeholder') {
 connectors.push(
   coinbaseWallet({
     appName: 'GEN-3D-ASSETS',
-    appLogoUrl: 'http://localhost:3000/favicon.ico',
+    appLogoUrl: `${getAppUrl()}/favicon.ico`,
   })
 );
 

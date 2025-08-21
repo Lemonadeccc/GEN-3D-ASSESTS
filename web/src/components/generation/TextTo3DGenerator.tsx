@@ -19,6 +19,7 @@ import { useBalance, useTextTo3D, useTaskStatus } from '@/hooks/use-meshy';
 import { TextTo3DParams } from '@/lib/meshy/types';
 import { calculateCost, estimateGenerationTime } from '@/lib/meshy/config';
 import { ClientSideModel3DViewer } from '@/components/3d/ClientSideModel3DViewer';
+import { NFTMintDialog } from '@/components/web3/NFTMintDialog';
 import { storage } from '@/lib/storage';
 import { 
   Sparkles, 
@@ -29,7 +30,8 @@ import {
   Eye,
   Brush,
   Layers,
-  RotateCcw
+  RotateCcw,
+  Coins
 } from 'lucide-react';
 
 interface GeneratorProps {
@@ -436,11 +438,28 @@ export function TextTo3DGenerator({ onTaskCreated }: GeneratorProps) {
                   </div>
 
                   {taskStatus.status === 'SUCCEEDED' && taskStatus.model_urls && (
-                    <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200 space-y-3">
                       <h4 className="font-medium text-green-800 mb-2">✅ 生成成功！</h4>
                       <p className="text-green-700 text-sm">
                         3D 模型已生成完成，您可以在上方查看预览并下载模型文件。
                       </p>
+                      
+                      {/* NFT铸造按钮 */}
+                      <div className="flex items-center justify-between pt-3 border-t border-green-200">
+                        <div className="flex items-center space-x-2 text-sm text-green-700">
+                          <Coins className="h-4 w-4" />
+                          <span>将您的3D模型铸造为NFT</span>
+                        </div>
+                        <NFTMintDialog
+                          taskResult={taskStatus}
+                          trigger={
+                            <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                              <Coins className="h-4 w-4 mr-2" />
+                              铸造NFT
+                            </Button>
+                          }
+                        />
+                      </div>
                     </div>
                   )}
 

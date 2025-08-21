@@ -146,7 +146,7 @@ export function TNFTPage() {
             </p>
           </div>
           <div className="text-neutral-500 text-sm">
-            Please use the "Connect Wallet" button in the top navigation
+            Please use the &quot;Connect Wallet&quot; button in the top navigation
           </div>
         </div>
       </div>

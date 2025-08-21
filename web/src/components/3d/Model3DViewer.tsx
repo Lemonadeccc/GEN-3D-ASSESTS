@@ -23,7 +23,7 @@ import { useModelDownload } from '@/hooks/use-model-download';
 
 // GLB模型组件
 function GLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
-  const modelRef = useRef<any>();
+  const modelRef = useRef<any>(null);
 
   try {
     const { scene } = useGLTF(url);
@@ -52,7 +52,7 @@ function GLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; o
 
 // FBX模型组件
 function FBXModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
-  const modelRef = useRef<any>();
+  const modelRef = useRef<any>(null);
 
   try {
     const fbx = useFBX(url);
@@ -80,7 +80,7 @@ function FBXModel({ url, onLoad, onError }: { url: string; onLoad: () => void; o
 
 // 后备模型
 function FallbackModel() {
-  const meshRef = useRef<any>();
+  const meshRef = useRef<any>(null);
 
   useFrame(() => {
     if (meshRef.current) {
@@ -114,9 +114,9 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
   // 选择最佳格式：GLB > FBX（只使用兼容性好的格式）
   const getBestModelUrl = () => {
     if (taskResult.model_urls?.glb) {
-      return { url: taskResult.model_urls.glb, format: 'GLB' as const };
+      return { url: taskResult.model_urls?.glb || '', format: 'GLB' as const };
     } else if (taskResult.model_urls?.fbx) {
-      return { url: taskResult.model_urls.fbx, format: 'FBX' as const };
+      return { url: taskResult.model_urls?.fbx || '', format: 'FBX' as const };
     }
     return null;
   };
@@ -392,25 +392,25 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
 
           <div className="flex flex-wrap gap-2">
             {taskResult.model_urls?.glb && (
-              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.glb, '_blank')}>
+              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls?.glb, '_blank')}>
                 <Download className="h-4 w-4 mr-2" />
                 下载 GLB
               </Button>
             )}
             {taskResult.model_urls?.fbx && (
-              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.fbx, '_blank')}>
+              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls?.fbx, '_blank')}>
                 <Download className="h-4 w-4 mr-2" />
                 下载 FBX
               </Button>
             )}
             {taskResult.model_urls?.obj && (
-              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.obj, '_blank')}>
+              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls?.obj, '_blank')}>
                 <Download className="h-4 w-4 mr-2" />
                 下载 OBJ
               </Button>
             )}
             {taskResult.model_urls?.usdz && (
-              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.usdz, '_blank')}>
+              <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls?.usdz, '_blank')}>
                 <Download className="h-4 w-4 mr-2" />
                 下载 USDZ
               </Button>

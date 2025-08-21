@@ -1,31 +1,18 @@
 'use client';
 
-import { ConnectKitButton } from 'connectkit';
-import { useAccount, useDisconnect } from 'wagmi';
+import { CustomWalletConnect } from '@/components/web3/CustomWalletConnect';
+import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Sparkles, Store, User, Home, Palette, Wallet, LogOut, Settings, Coins } from 'lucide-react';
+import { Sparkles, Store, User, Home, Palette, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
-
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
+  const { isConnected } = useAccount();
 
   // 缓存导航配置以避免重新渲染
   const navigation = useMemo(() => [
@@ -106,71 +93,8 @@ export function Navbar() {
               </Badge>
             </div>
 
-            {/* 钱包连接 */}
-            {isConnected && address ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 px-4 font-medium flex items-center space-x-2">
-                    <Wallet className="h-4 w-4" />
-                    <span className="hidden sm:inline">{formatAddress(address)}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">钱包地址</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {formatAddress(address)}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/nft" className="flex items-center">
-                      <Coins className="mr-2 h-4 w-4" />
-                      <span>我的 NFT</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="flex items-center">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>个人中心</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>设置</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => disconnect()}
-                    className="flex items-center text-red-600"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>断开连接</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <ConnectKitButton.Custom>
-                {({ isConnected, isConnecting, show, truncatedAddress, ensName }) => {
-                  return (
-                    <Button 
-                      onClick={show} 
-                      disabled={isConnecting}
-                      variant="outline" 
-                      size="sm"
-                      className="h-9 px-4 font-medium flex items-center space-x-2"
-                    >
-                      <Wallet className="h-4 w-4" />
-                      <span className="hidden sm:inline">
-                        {isConnecting ? '连接中...' : '连接钱包'}
-                      </span>
-                    </Button>
-                  );
-                }}
-              </ConnectKitButton.Custom>
-            )}
+            {/* 钱包连接 - 使用新的自定义组件 */}
+            <CustomWalletConnect />
           </div>
         </div>
       </div>

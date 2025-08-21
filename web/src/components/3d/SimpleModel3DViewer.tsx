@@ -2,8 +2,7 @@
 
 import { Suspense, useRef, useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Environment } from '@react-three/drei';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { OrbitControls, Environment, useGLTF } from '@react-three/drei';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,31 +30,15 @@ import { storage } from '@/lib/storage';
 
 // 使用memo包装3D模型组件避免重渲染
 const SimpleGLBModel = memo(function SimpleGLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
-  const modelRef = useRef<any>();
-  const [gltf, setGltf] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const modelRef = useRef<any>(null);
+  const gltf = useGLTF(url);
 
   useEffect(() => {
-    const loader = new GLTFLoader();
-    
-    loader.load(
-      url,
-      (loadedGltf) => {
-        console.log('GLB loaded successfully with native loader:', url);
-        setGltf(loadedGltf);
-        setLoading(false);
-        onLoad();
-      },
-      (progress) => {
-        console.log('GLB loading progress:', (progress.loaded / progress.total) * 100 + '%');
-      },
-      (error) => {
-        console.error('GLB loading failed with native loader:', error);
-        setLoading(false);
-        onError(error);
-      }
-    );
-  }, [url, onLoad, onError]);
+    if (gltf && gltf.scene) {
+      console.log('GLB loaded successfully with useGLTF hook:', url);
+      onLoad();
+    }
+  }, [gltf, onLoad, url]);
 
   useFrame(() => {
     if (modelRef.current) {
@@ -63,7 +46,7 @@ const SimpleGLBModel = memo(function SimpleGLBModel({ url, onLoad, onError }: { 
     }
   });
 
-  if (loading || !gltf) {
+  if (!gltf || !gltf.scene) {
     return null;
   }
 
@@ -178,7 +161,7 @@ const TextureDialog = memo(function TextureDialog({
 
 // 后备模型
 function FallbackModel() {
-  const meshRef = useRef<any>();
+  const meshRef = useRef<any>(null);
 
   useFrame(() => {
     if (meshRef.current) {

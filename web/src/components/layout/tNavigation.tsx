@@ -1,6 +1,7 @@
 'use client';
 
-import { ConnectKitButton } from 'connectkit';
+import { useState, useEffect } from 'react';
+import { CustomWalletConnect } from '@/components/web3/CustomWalletConnect';
 import { useAccount, useDisconnect } from 'wagmi';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Wallet, LogOut, Settings, Coins, User, ToggleLeft, ToggleRight } from 'lucide-react';
+import { LogOut, Settings, Coins, User, ToggleLeft, ToggleRight } from 'lucide-react';
+import { toast } from 'sonner';
+
 
 interface TNavigationProps {
   onToggleLayout?: () => void;
@@ -20,11 +23,17 @@ interface TNavigationProps {
 }
 
 export function TNavigation({ onToggleLayout, useNewLayout = false }: TNavigationProps) {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, connector } = useAccount();
+
   const { disconnect } = useDisconnect();
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    toast.info('钱包已断开连接');
   };
 
   return (
@@ -76,15 +85,23 @@ export function TNavigation({ onToggleLayout, useNewLayout = false }: TNavigatio
         {isConnected && address ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="font-medium flex items-center space-x-2">
-                <Wallet className="h-4 w-4" />
-                <span>{formatAddress(address)}</span>
-              </Button>
+              <div className="bg-neutral-900 rounded-full flex items-center gap-2 p-2 hover:bg-neutral-800 transition-colors cursor-pointer">
+                <span className="text-neutral-100 pl-2">
+                  {formatAddress(address)}
+                </span>
+                <div className="flex p-2 rounded-full bg-green-100 items-center justify-center size-8">
+                  <div className="h-2 w-2 rounded-full bg-green-600"></div>
+                </div>
+              </div>
+
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">我的钱包</p>
+                  <p className="text-sm font-medium leading-none">
+                    {connector?.name || '我的钱包'}
+                  </p>
+
                   <p className="text-xs leading-none text-muted-foreground">
                     {formatAddress(address)}
                   </p>
@@ -109,7 +126,8 @@ export function TNavigation({ onToggleLayout, useNewLayout = false }: TNavigatio
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onClick={() => disconnect()}
+                onClick={handleDisconnect}
+
                 className="flex items-center text-red-600"
               >
                 <LogOut className="mr-2 h-4 w-4" />
@@ -118,23 +136,7 @@ export function TNavigation({ onToggleLayout, useNewLayout = false }: TNavigatio
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <ConnectKitButton.Custom>
-            {({ isConnected, isConnecting, show, truncatedAddress, ensName }) => {
-              return (
-                <div className="bg-neutral-900 rounded-full flex items-center gap-2 p-2">
-                  <span className="text-neutral-100 pl-2 cursor-pointer" onClick={show}>
-                    {isConnecting ? '连接中...' : '连接钱包'}
-                  </span>
-                  <div 
-                    className="flex p-2 rounded-full bg-neutral-100 items-center justify-center size-8 cursor-pointer hover:bg-neutral-200 transition-colors"
-                    onClick={show}
-                  >
-                    <Wallet className="h-4 w-4 text-neutral-900" />
-                  </div>
-                </div>
-              );
-            }}
-          </ConnectKitButton.Custom>
+          <CustomWalletConnect variant="new-design" />
         )}
       </div>
     </div>

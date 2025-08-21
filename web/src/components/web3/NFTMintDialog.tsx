@@ -18,6 +18,7 @@ import { TaskStatusResponse } from '@/lib/meshy/types';
 import { useNFTMint } from '@/hooks/use-nft-mint';
 import { useAccount } from 'wagmi';
 import { ExternalLink, Wallet, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface NFTMintDialogProps {
   taskResult: TaskStatusResponse;
