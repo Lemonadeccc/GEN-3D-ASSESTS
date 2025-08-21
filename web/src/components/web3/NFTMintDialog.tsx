@@ -201,7 +201,7 @@ export function NFTMintDialog({ taskResult, trigger }: NFTMintDialogProps) {
 
             {/* 成功状态 */}
             {isSuccess && hash && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <div className="h-2 w-2 bg-green-500 rounded-full"></div>
                   <span className="text-sm font-medium text-green-800">铸造成功！</span>
@@ -209,15 +209,39 @@ export function NFTMintDialog({ taskResult, trigger }: NFTMintDialogProps) {
                 <div className="text-xs text-green-600 mb-2">
                   交易哈希: {hash.slice(0, 10)}...{hash.slice(-8)}
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.open(`https://sepolia.etherscan.io/tx/${hash}`, '_blank')}
-                  className="w-full"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  查看交易详情
-                </Button>
+                
+                {/* 操作指引 */}
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-green-800">后续步骤:</div>
+                  <div className="text-xs text-green-700 space-y-1">
+                    <div>• 在区块链浏览器上查看交易详情</div>
+                    <div>• 前往NFT页面查看您的收藏</div>
+                    <div>• 如果MetaMask中看不到，请使用调试工具手动添加</div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(`https://sepolia.etherscan.io/tx/${hash}`, '_blank')}
+                    className="text-xs"
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    查看交易
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      window.location.href = '/nft';
+                    }}
+                    className="text-xs"
+                  >
+                    查看NFT
+                  </Button>
+                </div>
               </div>
             )}
 

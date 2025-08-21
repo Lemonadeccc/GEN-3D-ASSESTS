@@ -141,7 +141,7 @@ function OriginalGeneratePage() {
 }
 
 export default function GeneratePage() {
-  const [useNewLayout, setUseNewLayout] = useState(false);
+  const [useNewLayout, setUseNewLayout] = useState(true); // 默认使用T-style布局
   const [generatedTasks, setGeneratedTasks] = useState<string[]>([]);
 
   // Load layout preference from localStorage
@@ -149,6 +149,9 @@ export default function GeneratePage() {
     const savedLayout = localStorage.getItem('layout-preference');
     if (savedLayout) {
       setUseNewLayout(savedLayout === 'tStyle');
+    } else {
+      // 如果没有保存的偏好，默认使用T-style
+      setUseNewLayout(true);
     }
   }, []);
 
@@ -184,7 +187,7 @@ export default function GeneratePage() {
           className="flex items-center gap-2 bg-background/90 backdrop-blur-sm shadow-lg border-2"
         >
           <Box className="h-4 w-4" />
-          T Design
+          Classic Design
         </Button>
       </div>
       

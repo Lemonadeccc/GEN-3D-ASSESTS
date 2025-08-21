@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,8 +15,13 @@ import {
   Wallet,
   Loader2,
   Package,
-  ArrowRight
+  ArrowRight,
+  Upload,
+  Sparkles
 } from 'lucide-react';
+import { NFTMintDialog } from '@/components/web3/NFTMintDialog';
+import { NFTDebugTools } from '@/components/web3/NFTDebugTools';
+import { storage } from '@/lib/storage';
 import Link from 'next/link';
 
 function TNFTCard({ nft }: { nft: any }) {
@@ -111,18 +117,147 @@ function TNFTCard({ nft }: { nft: any }) {
         </div>
 
         {/* Etherscan 链接 */}
-        <Button
-          size="sm"
-          variant="ghost"
-          className="w-full text-xs hover:bg-neutral-50"
-          onClick={() => {
-            const url = `https://sepolia.etherscan.io/token/${nft.contractAddress}?a=${nft.tokenId}`;
-            window.open(url, '_blank');
-          }}
-        >
-          <ExternalLink className="h-3 w-3 mr-1" />
-          View on Etherscan
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="flex-1 text-xs hover:bg-neutral-50"
+            onClick={() => {
+              const url = `https://sepolia.etherscan.io/token/${nft.contractAddress}?a=${nft.tokenId}`;
+              window.open(url, '_blank');
+            }}
+          >
+            <ExternalLink className="h-3 w-3 mr-1" />
+            View on Etherscan
+          </Button>
+          
+          <Button
+            size="sm"
+            variant="ghost"
+            className="flex-1 text-xs hover:bg-neutral-50"
+            onClick={() => {
+              // 添加到MetaMask的逻辑
+              if (typeof window !== 'undefined' && window.ethereum) {
+                window.ethereum.request({
+                  method: 'wallet_watchAsset',
+                  params: {
+                    type: 'ERC721',
+                    options: {
+                      address: nft.contractAddress,
+                      tokenId: nft.tokenId.toString(),
+                    },
+                  },
+                });
+              }
+            }}
+          >
+            Add to MetaMask
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// 显示可铸造的3D模型卡片
+function MintableModelCard({ taskResult }: { taskResult: any }) {
+  const handleDownload = () => {
+    if (taskResult.model_urls?.obj) {
+      window.open(taskResult.model_urls.obj, '_blank');
+    }
+  };
+
+  return (
+    <Card className="group hover:shadow-lg transition-all duration-200 overflow-hidden bg-white/50 backdrop-blur-sm border-neutral-200">
+      <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-neutral-50 to-neutral-100">
+        {taskResult.thumbnail_url ? (
+          <img
+            src={taskResult.thumbnail_url}
+            alt={`3D Model ${taskResult.id}`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Sparkles className="h-16 w-16 text-neutral-400" />
+          </div>
+        )}
+        <div className="absolute top-2 right-2">
+          <Badge variant="secondary" className="text-xs bg-white/80 backdrop-blur-sm">
+            Ready to Mint
+          </Badge>
+        </div>
+        <div className="absolute top-2 left-2">
+          <Badge variant="outline" className="text-xs bg-white/80 backdrop-blur-sm border-neutral-300">
+            {taskResult.mode}
+          </Badge>
+        </div>
+      </div>
+
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg line-clamp-1 text-neutral-900">
+          3D Model #{taskResult.id?.slice(-8)}
+        </CardTitle>
+        <p className="text-sm text-neutral-600 line-clamp-2">
+          Generated 3D model ready for NFT minting
+        </p>
+      </CardHeader>
+
+      <CardContent className="pt-0 space-y-3">
+        {/* 模型信息 */}
+        <div className="flex flex-wrap gap-1">
+          <Badge variant="outline" className="text-xs border-neutral-300">
+            {taskResult.art_style || 'Realistic'}
+          </Badge>
+          {taskResult.polycount && (
+            <Badge variant="outline" className="text-xs border-neutral-300">
+              {taskResult.polycount.toLocaleString()} poly
+            </Badge>
+          )}
+        </div>
+
+        {/* 操作按钮 */}
+        <div className="space-y-2">
+          {/* 主要铸造按钮 */}
+          <NFTMintDialog
+            taskResult={taskResult}
+            trigger={
+              <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+                <Upload className="h-4 w-4 mr-2" />
+                Mint as NFT
+              </Button>
+            }
+          />
+          
+          {/* 辅助按钮 */}
+          <div className="flex space-x-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDownload}
+              className="flex-1 border-neutral-300 hover:bg-neutral-50"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Download
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 border-neutral-300 hover:bg-neutral-50"
+              onClick={() => {
+                if (navigator.share && taskResult.thumbnail_url) {
+                  navigator.share({
+                    title: `3D Model ${taskResult.id?.slice(-8)}`,
+                    text: 'Check out this AI-generated 3D model!',
+                    url: taskResult.thumbnail_url,
+                  });
+                }
+              }}
+            >
+              <Share2 className="h-4 w-4 mr-1" />
+              Share
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -131,6 +266,24 @@ function TNFTCard({ nft }: { nft: any }) {
 export function TNFTPage() {
   const { isConnected, address } = useAccount();
   const { userNFTs, balance, totalSupply, isLoading } = useNFTQuery();
+  const [mintableModels, setMintableModels] = useState<any[]>([]);
+
+  // 从localStorage获取可铸造的模型
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const lastModel = storage.getLastSuccessfulModel();
+      if (lastModel && lastModel.status === 'SUCCEEDED') {
+        // 检查这个模型是否已经被铸造过NFT
+        // 这里可以添加更复杂的逻辑来检查哪些模型已经铸造
+        setMintableModels([lastModel]);
+      }
+    }
+  }, []);
+
+  // 清除已铸造的模型
+  const removeMintableModel = (taskId: string) => {
+    setMintableModels(prev => prev.filter(model => model.id !== taskId));
+  };
 
   if (!isConnected) {
     return (
@@ -183,6 +336,20 @@ export function TNFTPage() {
             </CardContent>
           </Card>
 
+          {/* 可铸造模型 */}
+          <Card className="bg-white/50 backdrop-blur-sm border-neutral-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-neutral-700">Ready to Mint</CardTitle>
+              <Upload className="h-4 w-4 text-neutral-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-neutral-900">{mintableModels.length}</div>
+              <p className="text-xs text-neutral-500 mt-1">
+                3D models ready for minting
+              </p>
+            </CardContent>
+          </Card>
+
           {/* 我的创作 */}
           <Card className="bg-white/50 backdrop-blur-sm border-neutral-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -219,58 +386,92 @@ export function TNFTPage() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
+
+          {/* NFT调试工具 */}
+          <NFTDebugTools />
         </div>
 
-        {/* 右侧 67% - 我的作品 */}
+        {/* 右侧 67% - 分为两个区域 */}
         <div className="w-2/3 space-y-6 anim-b opacity-0 ![animation-delay:500ms]">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-neutral-900">My Works</h2>
-            <Badge variant="outline" className="border-neutral-300">
-              {userNFTs.length} items
-            </Badge>
-          </div>
-
-          {isLoading ? (
-            <div className="flex items-center justify-center h-[500px]">
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-24 h-24 bg-neutral-200 rounded-full flex items-center justify-center">
-                  <Loader2 className="h-12 w-12 animate-spin text-neutral-500" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-neutral-900">Loading...</h3>
-                  <p className="text-neutral-600 max-w-md mx-auto">
-                    Fetching your NFT collection
-                  </p>
-                </div>
+          {/* 可铸造模型区域 */}
+          {mintableModels.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-neutral-900">Ready to Mint</h2>
+                <Badge variant="outline" className="border-blue-300 text-blue-700 bg-blue-50">
+                  {mintableModels.length} models
+                </Badge>
               </div>
-            </div>
-          ) : userNFTs.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[600px] overflow-y-auto pr-2">
-              {userNFTs.map((nft) => (
-                <TNFTCard key={nft.tokenId} nft={nft} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-[500px]">
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-24 h-24 bg-neutral-200 rounded-full flex items-center justify-center">
-                  <Package className="h-12 w-12 text-neutral-500" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-neutral-900">No NFTs Yet</h3>
-                  <p className="text-neutral-600 max-w-md mx-auto">
-                    Start creating your first 3D NFT artwork
-                  </p>
-                </div>
-                <Button asChild className="bg-neutral-900 hover:bg-neutral-800">
-                  <Link href="/generate">
-                    <Palette className="mr-2 h-4 w-4" />
-                    Start Creating
-                  </Link>
-                </Button>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {mintableModels.map((model) => (
+                  <MintableModelCard 
+                    key={model.id} 
+                    taskResult={model} 
+                  />
+                ))}
               </div>
+              
+              <div className="h-px bg-neutral-200"></div>
             </div>
           )}
+
+          {/* 我的NFT作品区域 */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-neutral-900">My NFT Collection</h2>
+              <Badge variant="outline" className="border-neutral-300">
+                {userNFTs.length} items
+              </Badge>
+            </div>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center h-[400px]">
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-24 h-24 bg-neutral-200 rounded-full flex items-center justify-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-neutral-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold text-neutral-900">Loading...</h3>
+                    <p className="text-neutral-600 max-w-md mx-auto">
+                      Fetching your NFT collection
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : userNFTs.length > 0 ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto pr-2">
+                {userNFTs.map((nft) => (
+                  <TNFTCard key={nft.tokenId} nft={nft} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-[400px]">
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-24 h-24 bg-neutral-200 rounded-full flex items-center justify-center">
+                    <Package className="h-12 w-12 text-neutral-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold text-neutral-900">No NFTs Yet</h3>
+                    <p className="text-neutral-600 max-w-md mx-auto">
+                      {mintableModels.length > 0 
+                        ? "Mint your generated 3D models above to create your first NFT"
+                        : "Start creating your first 3D NFT artwork"
+                      }
+                    </p>
+                  </div>
+                  {mintableModels.length === 0 && (
+                    <Button asChild className="bg-neutral-900 hover:bg-neutral-800">
+                      <Link href="/generate">
+                        <Palette className="mr-2 h-4 w-4" />
+                        Start Creating
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

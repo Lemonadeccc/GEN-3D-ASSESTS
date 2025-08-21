@@ -9,6 +9,7 @@ import { useNFTQuery } from '@/hooks/use-nft-query';
 import { useAccount } from 'wagmi';
 import { LayoutWrapper } from '@/components/layout/LayoutWrapper';
 import { TNFTPage } from '@/components/nft';
+import { NFTDebugTools } from '@/components/web3/NFTDebugTools';
 import {
   Coins,
   ExternalLink,
@@ -115,18 +116,47 @@ function NFTCard({ nft }: { nft: any }) {
         </div>
 
         {/* Etherscan 链接 */}
-        <Button
-          size="sm"
-          variant="ghost"
-          className="w-full text-xs"
-          onClick={() => {
-            const url = `https://sepolia.etherscan.io/token/${nft.contractAddress}?a=${nft.tokenId}`;
-            window.open(url, '_blank');
-          }}
-        >
-          <ExternalLink className="h-3 w-3 mr-1" />
-          在 Etherscan 查看
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="flex-1 text-xs"
+            onClick={() => {
+              const url = `https://sepolia.etherscan.io/token/${nft.contractAddress}?a=${nft.tokenId}`;
+              window.open(url, '_blank');
+            }}
+          >
+            <ExternalLink className="h-3 w-3 mr-1" />
+            在 Etherscan 查看
+          </Button>
+          
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 text-xs"
+            onClick={async () => {
+              // 添加到MetaMask的逻辑
+              if (typeof window !== 'undefined' && window.ethereum) {
+                try {
+                  await window.ethereum.request({
+                    method: 'wallet_watchAsset',
+                    params: {
+                      type: 'ERC721',
+                      options: {
+                        address: nft.contractAddress,
+                        tokenId: nft.tokenId.toString(),
+                      },
+                    },
+                  });
+                } catch (error) {
+                  console.error('添加到MetaMask失败:', error);
+                }
+              }
+            }}
+          >
+            添加到 MetaMask
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -214,6 +244,12 @@ function OriginalNFTPage() {
                 </p>
               </CardContent>
             </Card>
+          </div>
+
+          {/* 调试工具区域 */}
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">调试工具</h2>
+            <NFTDebugTools />
           </div>
 
           {/* NFT 网格 */}
