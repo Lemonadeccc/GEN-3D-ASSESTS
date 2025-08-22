@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useBalance, useTextTo3D, useTaskStatus, useTextToTexture, useTextureTaskStatus } from '@/hooks/use-meshy';
+import { useBalance, useTextTo3D, useTaskStatus } from '@/hooks/use-meshy';
 import { TextTo3DParams, TaskStatusResponse } from '@/lib/meshy/types';
 import { ClientSideModel3DViewer } from '@/components/3d/ClientSideModel3DViewer';
 import { SimpleCubeScene } from '@/components/3d/RotatingCube';
@@ -26,9 +26,10 @@ import {
   FileText,
   Settings,
   Eye,
-  Palette,
-  Download
+  Download,
+  Coins
 } from 'lucide-react';
+import { NFTMintDialog } from '@/components/web3/NFTMintDialog';
 
 // Zod schema for prompt validation
 const promptSchema = z.string()
@@ -52,14 +53,11 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
   const [previewTaskId, setPreviewTaskId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generatedTasks, setGeneratedTasks] = useState<string[]>([]);
-  const [textureTaskId, setTextureTaskId] = useState<string | null>(null);
 
   // Hooks
   const { data: balance, isLoading: balanceLoading } = useBalance();
   const textTo3DMutation = useTextTo3D();
   const { data: taskStatus } = useTaskStatus(currentTaskId) as { data: TaskStatusResponse | undefined };
-  const textToTextureMutation = useTextToTexture();
-  const { data: textureTaskStatus } = useTextureTaskStatus(textureTaskId) as { data: TaskStatusResponse | undefined };
 
   // Validate prompt on change
   const handlePromptChange = (value: string) => {
@@ -158,24 +156,19 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
     }
   };
 
-  // Generate texture for current model
-  const handleTextureGenerate = async () => {
-    if (!taskStatus || !taskStatus.model_urls?.glb) return;
-    
-    try {
-      const result = await textToTextureMutation.mutateAsync({
-        model_url: taskStatus.model_urls.glb,
-        prompt: prompt.trim(),
-      });
-      
-      if (result?.result) {
-        setTextureTaskId(result.result);
-        console.log('✅ Texture generation started:', result.result);
-      }
-    } catch (error) {
-      console.error('❌ Texture generation failed:', error);
+  // 智能选择最佳模型进行铸造 - 简化版，只依赖主要任务状态
+  const getBestModelForMint = () => {
+    if (taskStatus && taskStatus.status === 'SUCCEEDED') {
+      return {
+        taskResult: taskStatus,
+        type: 'base',
+        label: '铸造NFT'
+      };
     }
+    return null;
   };
+
+  const bestModel = getBestModelForMint();
 
   return (
     <div className="w-full h-full flex">
@@ -343,15 +336,28 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
               <Play className="mr-2 h-4 w-4" />
               {isGenerating ? 'Generating...' : 'Start Generate'}
             </Button>
+
+            {/* 🎯 功能提示 */}
+            <div className="p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+              <div className="flex items-center space-x-2 mb-2">
+                <Coins className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800">NFT铸造</span>
+              </div>
+              <div className="text-xs text-green-700 space-y-1">
+                <div>🎯 生成完成后即可铸造NFT</div>
+                <div>📍 铸造按钮在右侧模型信息区</div>
+                <div>🔥 3D预览中可生成纹理升级模型</div>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
       {/* Middle Panel - 33% */}
-      <div className="w-1/3 p-6 border-l border-r border-neutral-200">
-        <div className="h-full flex flex-col">
-          <h2 className="text-lg font-semibold mb-4">3D Model Preview</h2>
-          <div className="flex-1 min-h-[400px]">
+      <div className="w-1/3 p-6 border-l border-r border-neutral-200 overflow-y-auto">
+        <div className="space-y-6">
+          <h2 className="text-lg font-semibold">3D Model Preview</h2>
+          <div className="min-h-[400px] max-h-[600px]">
             {taskStatus && taskStatus.status === 'SUCCEEDED' ? (
               <ClientSideModel3DViewer 
                 taskResult={taskStatus} 
@@ -406,73 +412,50 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
           )}
         </div>
 
-        {/* Model Info Panel - Lower part (fixed height) */}
+        {/* Model Info Panel - Lower part (adjustable height) */}
         {taskStatus && taskStatus.status === 'SUCCEEDED' && (
-          <div className="h-48 border-t border-neutral-200 p-4">
-            <div className="bg-background/90 backdrop-blur-sm rounded-lg p-3 h-full">
-              <div className="flex flex-col h-full">
+          <div className="min-h-48 max-h-80 border-t border-neutral-200 p-4 overflow-y-auto">
+            <div className="bg-background/90 backdrop-blur-sm rounded-lg p-3">
+              <div className="flex flex-col space-y-3">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <Badge variant="secondary" className="mb-2">
                       <Eye className="h-3 w-3 mr-1" />
-                      3D Preview (GLB)
+                      3D模型
                     </Badge>
                     <div className="text-xs text-muted-foreground space-y-1">
                       <div>Task ID: {taskStatus.id.slice(0, 8)}...</div>
                       <div>Status: {taskStatus.status === 'SUCCEEDED' ? '加载完成' : taskStatus.status}</div>
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="ml-2"
-                    onClick={() => taskStatus.model_urls?.glb && window.open(taskStatus.model_urls.glb, '_blank')}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    下载
-                  </Button>
-                </div>
-
-                {/* Texture Generation Section */}
-                <div className="flex-1 mt-2 p-2 bg-neutral-50 rounded border">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <Palette className="h-3 w-3 text-neutral-600" />
-                      <span className="text-xs font-medium">纹理生成</span>
-                    </div>
-                    {!textureTaskId && (
-                      <button 
-                        onClick={handleTextureGenerate}
-                        disabled={textToTextureMutation.isPending}
-                        className="text-neutral-600 hover:text-neutral-800 text-xs underline cursor-pointer disabled:opacity-50"
-                      >
-                        {textToTextureMutation.isPending ? '生成中...' : '重新生成'}
-                      </button>
+                  <div className="flex gap-2 ml-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => taskStatus.model_urls?.glb && window.open(taskStatus.model_urls.glb, '_blank')}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      下载
+                    </Button>
+                    {/* 🎯 MINT按钮 */}
+                    {bestModel && (
+                      <NFTMintDialog 
+                        taskResult={bestModel.taskResult} 
+                        trigger={
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <Coins className="h-3 w-3 mr-1" />
+                            {bestModel.label}
+                          </Button>
+                        }
+                      />
                     )}
                   </div>
-                  
-                  {textureTaskStatus ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span>Status: {textureTaskStatus.status}</span>
-                        <span>{textureTaskStatus.progress || 0}%</span>
-                      </div>
-                      <div className="w-full bg-neutral-200 rounded-full h-1">
-                        <div 
-                          className="bg-neutral-900 h-1 rounded-full transition-all"
-                          style={{ width: `${textureTaskStatus.progress || 0}%` }}
-                        />
-                      </div>
-                      {textureTaskStatus.status === 'SUCCEEDED' && (
-                        <div className="text-xs text-green-700">✅ 纹理生成完成</div>
-                      )}
-                    </div>
-                  ) : textureTaskId ? (
-                    <div className="text-xs text-neutral-500">正在获取任务状态...</div>
-                  ) : (
-                    <div className="text-xs text-neutral-500">点击重新生成创建新纹理</div>
-                  )}
                 </div>
+
               </div>
             </div>
           </div>

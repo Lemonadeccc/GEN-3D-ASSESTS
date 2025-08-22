@@ -154,10 +154,10 @@ export function useNFTMint() {
         {
           taskId: taskResult.id,
           modelUrl:
-            taskResult.model_urls.glb || taskResult.model_urls.obj || '',
+            taskResult.model_urls?.glb || taskResult.model_urls?.obj || '',
           thumbnailUrl: taskResult.thumbnail_url,
           videoUrl: taskResult.video_url,
-          textureUrls: taskResult.texture_urls || [],
+          textureUrls: taskResult.texture_urls?.map(tex => tex.base_color || '').filter(Boolean) || [],
           artStyle: taskResult.art_style || 'realistic',
           mode: taskResult.mode as 'preview' | 'refine',
           polycount: taskResult.polycount,
@@ -176,16 +176,16 @@ export function useNFTMint() {
         name,
         description,
         meshyTaskId: taskResult.id,
-        modelUrl: taskResult.model_urls.glb || taskResult.model_urls.obj || '',
+        modelUrl: taskResult.model_urls?.glb || taskResult.model_urls?.obj || '',
         thumbnailUrl: taskResult.thumbnail_url || '',
         videoUrl: taskResult.video_url || '',
-        textureUrls: taskResult.texture_urls || [],
+        textureUrls: taskResult.texture_urls?.map(tex => tex.base_color || '').filter(Boolean) || [],
         artStyle: taskResult.art_style || 'realistic',
         mode: taskResult.mode === 'refine' ? 1 : 0,
         hasTexture: (taskResult.texture_urls?.length || 0) > 0,
         polycount: BigInt(taskResult.polycount || 0),
         creator: address,
-        royaltyBps,
+        royaltyBps: royaltyBps,
         createdAt: BigInt(Math.floor(Date.now() / 1000)),
       };
 

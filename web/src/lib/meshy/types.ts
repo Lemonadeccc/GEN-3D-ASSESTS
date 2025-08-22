@@ -77,6 +77,8 @@ export interface TaskStatusResponse {
     normal?: string;
     metallic?: string;
   }>;
+  polycount?: number; // 多边形数量
+  target_polycount?: number; // 目标多边形数量
 }
 
 // 任务结果

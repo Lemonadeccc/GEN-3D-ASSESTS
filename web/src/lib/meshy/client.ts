@@ -78,12 +78,14 @@ export class MeshyClient {
       // JSON解析失败，使用默认错误信息
     }
     
-    return new APIError(
+    const error = new APIError(
       errorData.message || `HTTP ${response.status}`,
       response.status,
       errorData.code || 'UNKNOWN_ERROR',
       errorData
     );
+    
+    return error;
   }
 
   private shouldNotRetry(error: any): boolean {
@@ -162,11 +164,11 @@ export class MeshyClient {
     
     const requestBody: any = {
       model_url: params.model_url,
-      prompt: params.prompt,
+      text_style_prompt: params.prompt, // 使用 text_style_prompt 而不是 prompt
     };
 
     // 添加可选参数 - 使用正确的API字段名
-    if (params.text_style_prompt) requestBody.text_style_prompt = params.text_style_prompt;
+    if (params.text_style_prompt) requestBody.text_style_prompt = params.text_style_prompt; // 如果显式提供了，优先使用
     if (params.negative_prompt) requestBody.negative_prompt = params.negative_prompt;
     if (params.ai_model) requestBody.ai_model = params.ai_model;
     if (params.enable_pbr !== undefined) requestBody.enable_pbr = params.enable_pbr;
