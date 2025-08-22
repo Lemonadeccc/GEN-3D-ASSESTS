@@ -42,8 +42,8 @@ function TNFTCard({ nft }: { nft: any }) {
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-200 overflow-hidden bg-white/50 backdrop-blur-sm border-neutral-200">
-      <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-neutral-50 to-neutral-100">
+    <Card className="group hover:shadow-lg transition-all duration-200 overflow-hidden bg-gray-800/50 backdrop-blur-sm border-gray-700">
+      <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
         {nft.metadata.thumbnailUrl ? (
           <img
             src={nft.metadata.thumbnailUrl}
@@ -52,20 +52,20 @@ function TNFTCard({ nft }: { nft: any }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Package className="h-16 w-16 text-neutral-400" />
+            <Package className="h-16 w-16 text-gray-500" />
           </div>
         )}
         <div className="absolute top-2 right-2">
-          <Badge variant="secondary" className="text-xs bg-white/80 backdrop-blur-sm">
+          <Badge variant="secondary" className="text-xs bg-gray-700/80 text-gray-300 backdrop-blur-sm">
             #{nft.tokenId}
           </Badge>
         </div>
       </div>
 
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg line-clamp-1 text-neutral-900">{nft.metadata.name}</CardTitle>
+        <CardTitle className="text-lg line-clamp-1 text-white">{nft.metadata.name}</CardTitle>
         {nft.metadata.description && (
-          <p className="text-sm text-neutral-600 line-clamp-2">
+          <p className="text-sm text-gray-400 line-clamp-2">
             {nft.metadata.description}
           </p>
         )}
@@ -74,14 +74,14 @@ function TNFTCard({ nft }: { nft: any }) {
       <CardContent className="pt-0 space-y-3">
         {/* 属性标签 */}
         <div className="flex flex-wrap gap-1">
-          <Badge variant="outline" className="text-xs border-neutral-300">
+          <Badge variant="outline" className="text-xs border-gray-600 text-gray-300">
             {nft.metadata.artStyle}
           </Badge>
-          <Badge variant="outline" className="text-xs border-neutral-300">
+          <Badge variant="outline" className="text-xs border-gray-600 text-gray-300">
             {nft.metadata.mode === 1 ? 'Refine' : 'Preview'}
           </Badge>
           {nft.metadata.hasTexture && (
-            <Badge variant="outline" className="text-xs border-neutral-300">
+            <Badge variant="outline" className="text-xs border-gray-600 text-gray-300">
               Textured
             </Badge>
           )}
@@ -89,7 +89,7 @@ function TNFTCard({ nft }: { nft: any }) {
 
         {/* 统计信息 */}
         {nft.metadata.polycount > 0 && (
-          <div className="text-xs text-neutral-500">
+          <div className="text-xs text-gray-400">
             Polygons: {Number(nft.metadata.polycount).toLocaleString()}
           </div>
         )}
@@ -100,7 +100,7 @@ function TNFTCard({ nft }: { nft: any }) {
             size="sm"
             variant="outline"
             onClick={handleDownload}
-            className="flex-1 border-neutral-300 hover:bg-neutral-50"
+            className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white"
           >
             <Download className="h-4 w-4 mr-1" />
             Download
@@ -109,7 +109,7 @@ function TNFTCard({ nft }: { nft: any }) {
             size="sm"
             variant="outline"
             onClick={handleShare}
-            className="flex-1 border-neutral-300 hover:bg-neutral-50"
+            className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white"
           >
             <Share2 className="h-4 w-4 mr-1" />
             Share
@@ -130,7 +130,7 @@ function TNFTCard({ nft }: { nft: any }) {
             <ExternalLink className="h-3 w-3 mr-1" />
             View on Etherscan
           </Button>
-          
+
           <Button
             size="sm"
             variant="ghost"
@@ -227,7 +227,7 @@ function MintableModelCard({ taskResult }: { taskResult: any }) {
               </Button>
             }
           />
-          
+
           {/* 辅助按钮 */}
           <div className="flex space-x-2">
             <Button
@@ -258,6 +258,18 @@ function MintableModelCard({ taskResult }: { taskResult: any }) {
             </Button>
           </div>
         </div>
+        {/* <Button
+          size="sm"
+          variant="ghost"
+          className="w-full text-xs text-gray-400 hover:text-white hover:bg-gray-700"
+          onClick={() => {
+            const url = `https://sepolia.etherscan.io/token/${nft.contractAddress}?a=${nft.tokenId}`;
+            window.open(url, '_blank');
+          }}
+        >
+          <ExternalLink className="h-3 w-3 mr-1" />
+          View on Etherscan
+        </Button> */}
       </CardContent>
     </Card>
   );
@@ -287,18 +299,18 @@ export function TNFTPage() {
 
   if (!isConnected) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
+      <div className="flex flex-col items-center justify-center h-full bg-black text-white">
         <div className="text-center space-y-6 anim-b opacity-0">
-          <div className="mx-auto w-24 h-24 bg-neutral-200 rounded-full flex items-center justify-center">
-            <Wallet className="h-12 w-12 text-neutral-500" />
+          <div className="mx-auto w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center">
+            <Wallet className="h-12 w-12 text-gray-400" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-neutral-900">Connect Wallet</h1>
-            <p className="text-neutral-600 max-w-md mx-auto">
+            <h1 className="text-3xl font-bold text-white">Connect Wallet</h1>
+            <p className="text-gray-400 max-w-md mx-auto">
               Connect your wallet to view and manage your 3D NFT collection
             </p>
           </div>
-          <div className="text-neutral-500 text-sm">
+          <div className="text-gray-500 text-sm">
             Please use the &quot;Connect Wallet&quot; button in the top navigation
           </div>
         </div>
@@ -307,13 +319,13 @@ export function TNFTPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8 h-full">
+    <div className="flex flex-col gap-8 h-full bg-black text-white">
       {/* 主标题区域 - 与首页风格一致 */}
       <div className="text-center space-y-4">
-        <h1 className="text-[4rem] leading-[4rem] anim-r opacity-0 ![animation-delay:200ms] font-bold text-neutral-900">
+        <h1 className="text-[4rem] leading-[4rem] anim-r opacity-0 ![animation-delay:200ms] font-bold text-white">
           MY NFT COLLECTION
         </h1>
-        <h2 className="text-[2rem] leading-[2rem] anim-r opacity-0 ![animation-delay:300ms] text-neutral-600">
+        <h2 className="text-[2rem] leading-[2rem] anim-r opacity-0 ![animation-delay:300ms] text-gray-400">
           3D Digital Assets Portfolio
         </h2>
       </div>
@@ -323,14 +335,14 @@ export function TNFTPage() {
         {/* 左侧 33% - 统计信息 */}
         <div className="w-1/3 space-y-6 anim-b opacity-0 ![animation-delay:400ms]">
           {/* 我的 NFT */}
-          <Card className="bg-white/50 backdrop-blur-sm border-neutral-200">
+          <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-neutral-700">My NFTs</CardTitle>
-              <Coins className="h-4 w-4 text-neutral-500" />
+              <CardTitle className="text-sm font-medium text-gray-300">My NFTs</CardTitle>
+              <Coins className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-neutral-900">{balance}</div>
-              <p className="text-xs text-neutral-500 mt-1">
+              <div className="text-3xl font-bold text-white">{balance}</div>
+              <p className="text-xs text-gray-400 mt-1">
                 Total NFTs owned
               </p>
             </CardContent>
@@ -351,35 +363,35 @@ export function TNFTPage() {
           </Card>
 
           {/* 我的创作 */}
-          <Card className="bg-white/50 backdrop-blur-sm border-neutral-200">
+          <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-neutral-700">My Creations</CardTitle>
-              <Palette className="h-4 w-4 text-neutral-500" />
+              <CardTitle className="text-sm font-medium text-gray-300">My Creations</CardTitle>
+              <Palette className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-neutral-900">{userNFTs.length}</div>
-              <p className="text-xs text-neutral-500 mt-1">
+              <div className="text-3xl font-bold text-white">{userNFTs.length}</div>
+              <p className="text-xs text-gray-400 mt-1">
                 3D models created
               </p>
             </CardContent>
           </Card>
 
           {/* 总发行量 */}
-          <Card className="bg-white/50 backdrop-blur-sm border-neutral-200">
+          <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-neutral-700">Total Supply</CardTitle>
-              <Package className="h-4 w-4 text-neutral-500" />
+              <CardTitle className="text-sm font-medium text-gray-300">Total Supply</CardTitle>
+              <Package className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-neutral-900">{totalSupply}</div>
-              <p className="text-xs text-neutral-500 mt-1">
+              <div className="text-3xl font-bold text-white">{totalSupply}</div>
+              <p className="text-xs text-gray-400 mt-1">
                 Platform total NFTs
               </p>
             </CardContent>
           </Card>
 
           {/* 创作新作品按钮 */}
-          <Button asChild className="w-full bg-neutral-900 hover:bg-neutral-800">
+          <Button asChild className="w-full bg-blue-700 hover:bg-blue-600 text-white">
             <Link href="/generate">
               <Palette className="mr-2 h-4 w-4" />
               Create New Work
@@ -402,16 +414,61 @@ export function TNFTPage() {
                   {mintableModels.length} models
                 </Badge>
               </div>
-              
+
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {mintableModels.map((model) => (
-                  <MintableModelCard 
-                    key={model.id} 
-                    taskResult={model} 
+                  <MintableModelCard
+                    key={model.id}
+                    taskResult={model}
                   />
                 ))}
+                {/* <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">My Works</h2>
+            <Badge variant="outline" className="border-gray-600 text-gray-300">
+              {userNFTs.length} items
+            </Badge>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[500px]">
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center">
+                  <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-white">Loading...</h3>
+                  <p className="text-gray-400 max-w-md mx-auto">
+                    Fetching your NFT collection
+                  </p>
+                </div>
               </div>
-              
+            </div>
+          ) : userNFTs.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[600px] overflow-y-auto pr-2">
+              {userNFTs.map((nft) => (
+                <TNFTCard key={nft.tokenId} nft={nft} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-[500px]">
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center">
+                  <Package className="h-12 w-12 text-gray-400" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-white">No NFTs Yet</h3>
+                  <p className="text-gray-400 max-w-md mx-auto">
+                    Start creating your first 3D NFT artwork
+                  </p>
+                </div>
+                <Button asChild className="bg-blue-700 hover:bg-blue-600">
+                  <Link href="/generate">
+                    <Palette className="mr-2 h-4 w-4" />
+                    Start Creating
+                  </Link>
+                </Button> */}
+              </div>
+
               <div className="h-px bg-neutral-200"></div>
             </div>
           )}
@@ -454,7 +511,7 @@ export function TNFTPage() {
                   <div className="space-y-2">
                     <h3 className="text-xl font-semibold text-neutral-900">No NFTs Yet</h3>
                     <p className="text-neutral-600 max-w-md mx-auto">
-                      {mintableModels.length > 0 
+                      {mintableModels.length > 0
                         ? "Mint your generated 3D models above to create your first NFT"
                         : "Start creating your first 3D NFT artwork"
                       }

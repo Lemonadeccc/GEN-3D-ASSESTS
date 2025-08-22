@@ -17,13 +17,12 @@ const geistMono = Geist_Mono({
 interface TLayoutProps {
   children: ReactNode;
   showNavigation?: boolean;
-  onToggleLayout?: () => void;
 }
 
-export default function TLayout({ children, showNavigation = true, onToggleLayout }: TLayoutProps) {
+export default function TLayout({ children, showNavigation = true }: TLayoutProps) {
   return (
     <div
-      className={`${geistSans.variable} ${geistMono.variable} antialiased w-screen h-screen relative bg-stone-300 overflow-hidden m-0 p-0`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased w-screen h-screen relative bg-black overflow-hidden m-0 p-0`}
     >
       {/* 背景内容层 - 可以放置3D元素或其他背景内容 */}
       <div className="w-full h-full fixed top-0 flex items-center justify-center">
@@ -37,7 +36,7 @@ export default function TLayout({ children, showNavigation = true, onToggleLayou
       <div className="w-full h-full flex flex-col justify-between px-10 py-12 z-10 relative">
         {/* 顶部导航区域 */}
         {showNavigation && (
-          <TNavigation onToggleLayout={onToggleLayout} useNewLayout={true} />
+          <TNavigation />
         )}
 
         {/* 主要内容区域 */}
