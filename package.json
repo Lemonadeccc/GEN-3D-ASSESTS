@@ -12,21 +12,9 @@
     "commit": "cz",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "lint": "pnpm run --recursive lint",
-    "lint:staged": "lint-staged",
     "format": "pnpm run --recursive format"
   },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md,yml,yaml}": [
-      "prettier --write"
-    ],
-    "*.sol": [
-      "forge fmt"
-    ]
-  },
+  
   "devDependencies": {
     "@commitlint/cli": "^17.8.1",
     "@commitlint/config-conventional": "^17.8.1",

@@ -1,7 +1,8 @@
 // API route to proxy model downloads with proper authorization
 import { NextRequest, NextResponse } from 'next/server';
 
-const MESHY_API_KEY = process.env.NEXT_PUBLIC_MESHY_API_KEY;
+// 使用服务端私密环境变量（不要在客户端暴露）
+const MESHY_API_KEY = process.env.MESHY_API_KEY;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
