@@ -107,7 +107,7 @@ export function useNFTQuery() {
       const tokenURIIndex = i * 3 + 1;
       const ownerIndex = i * 3 + 2;
 
-      const metadata = nftDetails[metadataIndex]?.result as Asset3DMetadata;
+      const metadata = nftDetails[metadataIndex]?.result as unknown as Asset3DMetadata;
       const tokenURI = nftDetails[tokenURIIndex]?.result as string;
       const owner = nftDetails[ownerIndex]?.result as string;
 

@@ -187,13 +187,13 @@ export function useNFTMint() {
         modelUrl: taskResult.model_urls?.glb || taskResult.model_urls?.obj || '',
         thumbnailUrl: taskResult.thumbnail_url || '',
         videoUrl: taskResult.video_url || '',
-        textureUrls: taskResult.texture_urls?.map(tex => tex.base_color || '').filter(Boolean) || [],
+        textureUrls: (taskResult.texture_urls?.map(tex => tex.base_color || '').filter(Boolean) || []) as readonly string[],
         artStyle: taskResult.art_style || 'realistic',
         mode: taskResult.mode === 'refine' ? 1 : 0,
         hasTexture: (taskResult.texture_urls?.length || 0) > 0,
         polycount: BigInt(taskResult.polycount || 0),
         creator: address,
-        royaltyBps: royaltyBps,
+        royaltyBps: BigInt(royaltyBps),
         createdAt: BigInt(Math.floor(Date.now() / 1000)),
       };
 
@@ -205,11 +205,14 @@ export function useNFTMint() {
         address
       });
       
+      // Help viem's complex generic inference by narrowing args
+      const args = [address as Address, metadata] as const;
       writeContract({
         address: contractAddress,
         abi: ASSET3D_NFT_ABI,
         functionName: 'mint',
-        args: [address, metadata],
+        // Cast to any to avoid 'never' intersection in viem prepared mode typings
+        args: args as any,
       });
       
     } catch (error) {

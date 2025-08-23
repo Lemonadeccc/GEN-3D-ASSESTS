@@ -120,8 +120,8 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
       promptSchema.parse(value);
       setPromptError('');
     } catch (error) {
-      if (error instanceof z.ZodError && error.errors && error.errors.length > 0) {
-        setPromptError(error.errors[0].message);
+      if (error instanceof z.ZodError && error.issues && error.issues.length > 0) {
+        setPromptError(error.issues[0].message);
       } else {
         setPromptError('Invalid input');
       }
@@ -232,8 +232,8 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
     try {
       promptSchema.parse(prompt);
     } catch (error) {
-      if (error instanceof z.ZodError && error.errors && error.errors.length > 0) {
-        setPromptError(error.errors[0].message);
+      if (error instanceof z.ZodError && error.issues && error.issues.length > 0) {
+        setPromptError(error.issues[0].message);
         return;
       } else {
         setPromptError('Invalid input');
@@ -249,7 +249,7 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
       art_style: artStyle,
       ai_model: aiModel,
       target_polycount: targetPolycount,
-      preview_task_id: mode === 'refine' ? previewTaskId : undefined,
+      preview_task_id: mode === 'refine' ? (previewTaskId ?? undefined) : undefined,
     };
 
     try {

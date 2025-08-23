@@ -16,7 +16,8 @@ import {
   Smartphone,
   ArrowRight,
   ExternalLink,
-  Shield
+  Shield,
+  Chrome
 } from 'lucide-react';
 import { toast } from 'sonner';
 

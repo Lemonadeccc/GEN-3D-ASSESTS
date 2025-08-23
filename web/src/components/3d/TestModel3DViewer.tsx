@@ -25,7 +25,7 @@ interface TestModel3DViewerProps {
 
 // GLB模型组件
 function GLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
-  const modelRef = useRef<any>();
+  const modelRef = useRef<any>(null);
   
   try {
     const { scene } = useGLTF(url);
@@ -53,7 +53,7 @@ function GLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; o
 
 // FBX模型组件
 function FBXModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
-  const modelRef = useRef<any>();
+  const modelRef = useRef<any>(null);
   
   try {
     const fbx = useFBX(url);
@@ -81,7 +81,7 @@ function FBXModel({ url, onLoad, onError }: { url: string; onLoad: () => void; o
 
 // OBJ模型组件 (需要额外的loader)
 function OBJModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
-  const modelRef = useRef<any>();
+  const modelRef = useRef<any>(null);
   
   // OBJ格式在Three.js中需要特殊处理，这里先显示错误
   useEffect(() => {
@@ -98,7 +98,7 @@ function OBJModel({ url, onLoad, onError }: { url: string; onLoad: () => void; o
 
 // 后备模型
 function FallbackModel() {
-  const meshRef = useRef<any>();
+  const meshRef = useRef<any>(null);
 
   useFrame(() => {
     if (meshRef.current) {

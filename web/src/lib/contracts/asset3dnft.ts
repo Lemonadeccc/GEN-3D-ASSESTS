@@ -1,4 +1,6 @@
 // Asset3DNFT Contract ABI and Address Configuration
+import type { Abi } from 'viem';
+
 export const ASSET3D_NFT_ABI = [
   // Constructor
   {
@@ -145,7 +147,7 @@ export const ASSET3D_NFT_ABI = [
     "outputs": [{"name": "", "type": "bytes32", "internalType": "bytes32"}],
     "stateMutability": "view"
   }
-] as const;
+] as const satisfies Abi;
 
 // Contract Addresses
 export const CONTRACT_ADDRESSES = {
@@ -167,12 +169,12 @@ export interface Asset3DMetadata {
   modelUrl: string;
   thumbnailUrl: string;
   videoUrl: string;
-  textureUrls: string[];
+  textureUrls: readonly string[];
   artStyle: string;
   mode: number;
   hasTexture: boolean;
   polycount: bigint;
   creator: `0x${string}`;
-  royaltyBps: number;
+  royaltyBps: bigint;
   createdAt: bigint;
 }

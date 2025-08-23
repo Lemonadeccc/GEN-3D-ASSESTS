@@ -109,13 +109,14 @@ export async function uploadFileToIPFS(file: File): Promise<IPFSUploadResult> {
       throw new Error('Pinata JWT not configured');
     }
 
-    // 先尝试使用SDK
+    // 先尝试使用SDK（公开网络）
     try {
-      const upload = await pinata.upload.file(file);
+      const upload = await pinata.upload.public.file(file);
+      const cid = upload.cid;
       return {
-        ipfsHash: upload.IpfsHash,
-        pinataUrl: `https://gateway.pinata.cloud/ipfs/${upload.IpfsHash}`,
-        gatewayUrl: `https://gateway.pinata.cloud/ipfs/${upload.IpfsHash}`,
+        ipfsHash: cid,
+        pinataUrl: `https://gateway.pinata.cloud/ipfs/${cid}`,
+        gatewayUrl: `https://gateway.pinata.cloud/ipfs/${cid}`,
       };
     } catch (sdkError) {
       console.warn('SDK upload failed, trying V1 API:', sdkError);

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit --noErrorTruncation",
+    "check": "pnpm run typecheck && next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

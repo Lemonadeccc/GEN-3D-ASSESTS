@@ -38,7 +38,10 @@ export function DirectModelViewer({ taskResult, textureModelUrl, className }: Di
           gl.outputColorSpace = THREE.SRGBColorSpace;
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 1.0;
-          gl.physicallyCorrectLights = true as any; // backward compat across three versions
+          // three r152+ 默认物理正确灯光，旧标志位已移除；如存在 useLegacyLights 则显式关闭
+          if ((gl as any).useLegacyLights !== undefined) {
+            (gl as any).useLegacyLights = false;
+          }
           gl.shadowMap.enabled = true;
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
         }}

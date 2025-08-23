@@ -8,8 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Box, Text } from '@react-three/drei';
+import nextDynamic from 'next/dynamic';
+// Disable SSR for three-related components to avoid prerender errors
+const Canvas = nextDynamic(() => import('@react-three/fiber').then(m => m.Canvas), { ssr: false });
+const OrbitControls = nextDynamic(() => import('@react-three/drei').then(m => m.OrbitControls), { ssr: false });
+const Box = nextDynamic(() => import('@react-three/drei').then(m => m.Box), { ssr: false });
+const Text = nextDynamic(() => import('@react-three/drei').then(m => m.Text), { ssr: false });
 import { useQuery } from '@tanstack/react-query';
 import { create } from 'zustand';
 import { useState } from 'react';
