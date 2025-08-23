@@ -27,26 +27,28 @@ export function LogoCubeShader({ time = 0, flowSpeed = 1.0 }: LogoCubeShaderProp
       uniforms={{
         time: { value: 0 },
         flowSpeed: { value: flowSpeed },
-        // 符合系统配色的深蓝到亮蓝渐变
-        colorDeep: { value: new THREE.Color('#0F172A') }, // 深灰蓝
-        colorMid: { value: new THREE.Color('#1E40AF') }, // 蓝色 (blue-700)
-        colorBright: { value: new THREE.Color('#3B82F6') }, // 亮蓝 (blue-500)
-        colorHighlight: { value: new THREE.Color('#93C5FD') }, // 浅蓝 (blue-300)
+        // 简洁的项目配色方案 - 以白色为主
+        colorBase: { value: new THREE.Color('#f8fafc') },    // 浅灰白 (slate-50)
+        colorWhite: { value: new THREE.Color('#ffffff') },   // 纯白色
+        colorLight: { value: new THREE.Color('#e2e8f0') },   // 浅灰 (slate-200)
+        colorBlue: { value: new THREE.Color('#3b82f6') },    // 蓝色 (blue-500)
+        colorAccent: { value: new THREE.Color('#1d4ed8') },  // 深蓝 (blue-700)
       }}
       vertexShader={`
         varying vec2 vUv;
         varying vec3 vPosition;
+        varying vec3 vNormal;
         uniform float time;
         
         void main() {
           vUv = uv;
           vPosition = position;
+          vNormal = normalize(normalMatrix * normal);
           
-          // 添加微妙的顶点波动，创造流动感
+          // 轻微的顶点动画
           vec3 pos = position;
-          pos.x += sin(position.y * 6.0 + time * 2.0) * 0.01;
-          pos.y += cos(position.x * 6.0 + time * 1.5) * 0.01;
-          pos.z += sin((position.x + position.y) * 4.0 + time * 1.8) * 0.008;
+          pos.x += sin(position.y * 4.0 + time * 1.5) * 0.005;
+          pos.y += cos(position.x * 4.0 + time * 1.2) * 0.005;
           
           gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
         }
@@ -54,52 +56,58 @@ export function LogoCubeShader({ time = 0, flowSpeed = 1.0 }: LogoCubeShaderProp
       fragmentShader={`
         uniform float time;
         uniform float flowSpeed;
-        uniform vec3 colorDeep;
-        uniform vec3 colorMid;
-        uniform vec3 colorBright;
-        uniform vec3 colorHighlight;
+        uniform vec3 colorBase;
+        uniform vec3 colorWhite;
+        uniform vec3 colorLight;
+        uniform vec3 colorBlue;
+        uniform vec3 colorAccent;
         varying vec2 vUv;
         varying vec3 vPosition;
+        varying vec3 vNormal;
         
         void main() {
-          // 多层流动波纹效果
-          float wave1 = sin(vUv.x * 10.0 + time * flowSpeed * 2.0) * 0.5 + 0.5;
-          float wave2 = cos(vUv.y * 8.0 + time * flowSpeed * 1.7) * 0.5 + 0.5;
-          float wave3 = sin((vUv.x + vUv.y) * 6.0 + time * flowSpeed * 2.3) * 0.5 + 0.5;
+          vec2 uv = vUv;
           
-          // 径向波纹
+          // 简单的波纹效果
+          float wave1 = sin(uv.x * 8.0 + time * flowSpeed * 1.5) * 0.5 + 0.5;
+          float wave2 = cos(uv.y * 6.0 + time * flowSpeed * 1.2) * 0.5 + 0.5;
+          
+          // 径向渐变
           vec2 center = vec2(0.5, 0.5);
-          float dist = length(vUv - center);
-          float radialWave = sin(dist * 15.0 - time * flowSpeed * 3.0) * 0.5 + 0.5;
+          float dist = length(uv - center);
           
-          // 组合所有波纹效果
-          float combinedWave = (wave1 * 0.3 + wave2 * 0.3 + wave3 * 0.2 + radialWave * 0.2);
+          // 组合波纹
+          float pattern = (wave1 * 0.4 + wave2 * 0.4 + (1.0 - dist) * 0.2);
           
-          // 四色渐变映射
+          // 主要以白色为基础的颜色映射
           vec3 color;
-          if (combinedWave < 0.25) {
-            float t = combinedWave / 0.25;
-            color = mix(colorDeep, colorMid, smoothstep(0.0, 1.0, t));
-          } else if (combinedWave < 0.5) {
-            float t = (combinedWave - 0.25) / 0.25;
-            color = mix(colorMid, colorBright, smoothstep(0.0, 1.0, t));
-          } else if (combinedWave < 0.75) {
-            float t = (combinedWave - 0.5) / 0.25;
-            color = mix(colorBright, colorHighlight, smoothstep(0.0, 1.0, t));
+          if (pattern < 0.3) {
+            // 主要区域 - 白色到浅白色
+            color = mix(colorLight, colorWhite, pattern / 0.3);
+          } else if (pattern < 0.7) {
+            // 中间区域 - 白色到淡蓝色
+            float t = (pattern - 0.3) / 0.4;
+            color = mix(colorWhite, colorBase, t * 0.3);
+            color = mix(color, colorBlue, t * 0.1);
           } else {
-            float t = (combinedWave - 0.75) / 0.25;
-            color = mix(colorHighlight, colorBright, smoothstep(0.0, 1.0, t));
+            // 高亮区域 - 白色带蓝色强调
+            float t = (pattern - 0.7) / 0.3;
+            color = mix(colorWhite, colorBlue, t * 0.2);
           }
           
-          // 添加边缘发光效果
-          float edgeGlow = 1.0 - smoothstep(0.0, 0.4, dist);
-          color += colorHighlight * edgeGlow * 0.2;
+          // 边缘轻微发光
+          float edgeGlow = 1.0 - smoothstep(0.0, 0.8, dist);
+          color = mix(color, colorWhite, edgeGlow * 0.2);
           
-          // 添加脉冲效果
-          float pulse = sin(time * flowSpeed * 4.0) * 0.1 + 0.9;
+          // 轻柔的脉冲
+          float pulse = sin(time * flowSpeed * 2.0) * 0.05 + 0.95;
           color *= pulse;
           
-          gl_FragColor = vec4(color, 0.92);
+          // 边缘蓝色强调
+          float fresnel = 1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0)));
+          color = mix(color, colorAccent, fresnel * 0.1);
+          
+          gl_FragColor = vec4(color, 0.9);
         }
       `}
     />

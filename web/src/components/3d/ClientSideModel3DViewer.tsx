@@ -7,9 +7,12 @@ import { TaskStatusResponse } from '@/lib/meshy/types';
 interface ClientSideModel3DViewerProps {
   taskResult: TaskStatusResponse;
   className?: string;
+  autoDownload?: boolean;
+  hideBottomInfo?: boolean;
+  textureTaskId?: string | null;
 }
 
-export function ClientSideModel3DViewer({ taskResult, className }: ClientSideModel3DViewerProps) {
+export function ClientSideModel3DViewer({ taskResult, className, autoDownload, hideBottomInfo, textureTaskId }: ClientSideModel3DViewerProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -27,5 +30,5 @@ export function ClientSideModel3DViewer({ taskResult, className }: ClientSideMod
     );
   }
 
-  return <SimpleModel3DViewer taskResult={taskResult} className={className} />;
+  return <SimpleModel3DViewer taskResult={taskResult} className={className} hideBottomInfo={hideBottomInfo} textureTaskId={textureTaskId} />;
 }

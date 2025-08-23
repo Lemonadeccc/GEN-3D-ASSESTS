@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,13 +19,15 @@ import { useNFTMint } from '@/hooks/use-nft-mint';
 import { useAccount } from 'wagmi';
 import { ExternalLink, Wallet, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { storage } from '@/lib/storage';
 
 interface NFTMintDialogProps {
   taskResult: TaskStatusResponse;
   trigger: React.ReactNode;
+  onMintSuccess?: (hash: string) => void;
 }
 
-export function NFTMintDialog({ taskResult, trigger }: NFTMintDialogProps) {
+export function NFTMintDialog({ taskResult, trigger, onMintSuccess }: NFTMintDialogProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [royaltyBps, setRoyaltyBps] = useState(250); // 2.5%
@@ -48,15 +50,25 @@ export function NFTMintDialog({ taskResult, trigger }: NFTMintDialogProps) {
   };
 
   const handleSuccess = () => {
-    setIsOpen(false);
     setName('');
     setDescription('');
     setRoyaltyBps(250);
   };
 
-  if (isSuccess) {
-    setTimeout(handleSuccess, 2000);
-  }
+  // 成功时清理表单但不关闭对话框，并调用回调
+  useEffect(() => {
+    if (isSuccess && hash) {
+      handleSuccess();
+      
+      // 标记模型为已铸造
+      storage.markModelAsMinted(taskResult.id, { 
+        tokenId: 0, // 这里暂时用0，实际应该从合约事件获取tokenId
+        transactionHash: hash 
+      });
+      
+      onMintSuccess?.(hash);
+    }
+  }, [isSuccess, hash, onMintSuccess, taskResult.id]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

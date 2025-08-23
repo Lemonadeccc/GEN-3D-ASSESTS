@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, useRef, memo } from 'react';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,14 +18,82 @@ import {
   Package,
   ArrowRight,
   Upload,
-  Sparkles
+  Sparkles,
+  Box
 } from 'lucide-react';
 import { NFTMintDialog } from '@/components/web3/NFTMintDialog';
 import { NFTDebugTools } from '@/components/web3/NFTDebugTools';
 import { storage } from '@/lib/storage';
 import Link from 'next/link';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Environment, useGLTF } from '@react-three/drei';
+
+// Lightweight 3D model component for NFT cards - 让ErrorBoundary处理所有错误
+const NFT3DModel = memo(function NFT3DModel({ url }: { url: string }) {
+  const modelRef = useRef<any>(null);
+  const gltf = useGLTF(url); // 错误会被ErrorBoundary捕获
+  
+  useFrame(() => {
+    if (modelRef.current) {
+      modelRef.current.rotation.y += 0.005; // Slow rotation
+    }
+  });
+
+  if (!gltf || !gltf.scene) {
+    return null;
+  }
+
+  return <primitive ref={modelRef} object={gltf.scene} scale={1} />;
+});
+
+// Error boundary component for 3D models
+class ModelErrorBoundary extends React.Component<
+  { children: React.ReactNode; onError: () => void },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; onError: () => void }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error('3D Model Error Boundary caught an error:', error, errorInfo);
+    this.props.onError();
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+          <div className="text-center">
+            <Box className="h-12 w-12 mx-auto text-gray-500 mb-2" />
+            <p className="text-xs text-gray-400">Failed to load 3D model</p>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Fallback for when model is loading or failed
+function NFTFallbackModel() {
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+      <Box className="h-16 w-16 text-gray-500" />
+    </div>
+  );
+}
 
 function TNFTCard({ nft }: { nft: any }) {
+  const [show3D, setShow3D] = useState(true);
+  const [modelLoadError, setModelLoadError] = useState(false);
+  
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -41,20 +110,69 @@ function TNFTCard({ nft }: { nft: any }) {
     }
   };
 
+  const has3DModel = nft.metadata.modelUrl && nft.metadata.modelUrl.endsWith('.glb');
+
   return (
     <Card className="group hover:shadow-lg transition-all duration-200 overflow-hidden bg-gray-800/50 backdrop-blur-sm border-gray-700">
       <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
-        {nft.metadata.thumbnailUrl ? (
-          <img
-            src={nft.metadata.thumbnailUrl}
-            alt={nft.metadata.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-          />
+        {/* Show 3D model if available and not errored, otherwise fallback to image */}
+        {has3DModel && show3D && !modelLoadError ? (
+          <Suspense fallback={<NFTFallbackModel />}>
+            <Canvas
+              camera={{ position: [0, 0, 3], fov: 45 }}
+              className="w-full h-full"
+              onError={() => {
+                console.error('3D model failed to load for NFT:', nft.tokenId);
+                setModelLoadError(true);
+                setShow3D(false);
+              }}
+            >
+              <ambientLight intensity={0.6} />
+              <directionalLight position={[10, 10, 5]} intensity={1} />
+              <pointLight position={[-10, -10, -5]} intensity={0.5} />
+              
+              <NFT3DModel url={nft.metadata.modelUrl} />
+              <Environment preset="city" />
+              
+              <OrbitControls
+                enablePan={false}
+                enableZoom={false}
+                enableRotate={true}
+                autoRotate={false}
+                dampingFactor={0.05}
+              />
+            </Canvas>
+          </Suspense>
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Package className="h-16 w-16 text-gray-500" />
+          /* Fallback to image or default icon */
+          nft.metadata.thumbnailUrl ? (
+            <img
+              src={nft.metadata.thumbnailUrl}
+              alt={nft.metadata.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Package className="h-16 w-16 text-gray-500" />
+            </div>
+          )
+        )}
+        
+        {/* Toggle button for 3D/Image view */}
+        {has3DModel && nft.metadata.thumbnailUrl && (
+          <div className="absolute top-2 left-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 bg-black/50 hover:bg-black/70 text-white"
+              onClick={() => setShow3D(!show3D)}
+              title={show3D ? "Show image" : "Show 3D model"}
+            >
+              {show3D ? "2D" : "3D"}
+            </Button>
           </div>
         )}
+        
         <div className="absolute top-2 right-2">
           <Badge variant="secondary" className="text-xs bg-gray-700/80 text-gray-300 backdrop-blur-sm">
             #{nft.tokenId}
@@ -160,33 +278,132 @@ function TNFTCard({ nft }: { nft: any }) {
 }
 
 // 显示可铸造的3D模型卡片
-function MintableModelCard({ taskResult }: { taskResult: any }) {
+function MintableModelCard({ taskResult, onMintSuccess }: { taskResult: any; onMintSuccess?: (taskId: string) => void }) {
+  const [show3D, setShow3D] = useState(false); // 默认显示图片
+  const [modelLoadError, setModelLoadError] = useState(false);
+  
   const handleDownload = () => {
     if (taskResult.model_urls?.obj) {
       window.open(taskResult.model_urls.obj, '_blank');
     }
   };
 
+  const has3DModel = taskResult.model_urls?.glb;
+
+  const handle3DToggle = () => {
+    // Reset error state when switching back to 2D
+    if (show3D) {
+      setModelLoadError(false);
+    }
+    
+    setShow3D(!show3D);
+  };
+
+  // 处理铸造成功回调
+  const handleMintSuccessLocal = (hash: string) => {
+    console.log('✅ Model minted successfully:', taskResult.id, hash);
+    // 调用父组件的回调来移除这个模型
+    onMintSuccess?.(taskResult.id);
+  };
+
   return (
     <Card className="group hover:shadow-lg transition-all duration-200 overflow-hidden bg-white/50 backdrop-blur-sm border-neutral-200">
       <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-neutral-50 to-neutral-100">
-        {taskResult.thumbnail_url ? (
-          <img
-            src={taskResult.thumbnail_url}
-            alt={`3D Model ${taskResult.id}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-          />
+        {/* Show 3D model if toggled on and available, otherwise show image */}
+        {has3DModel && show3D && !modelLoadError ? (
+          <ModelErrorBoundary onError={() => {
+            console.error('Error boundary triggered for 3D model:', taskResult.id);
+            setModelLoadError(true);
+            setShow3D(false);
+          }}>
+            <Suspense fallback={
+              <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
+              </div>
+            }>
+              <Canvas
+                camera={{ position: [0, 0, 3], fov: 45 }}
+                className="w-full h-full"
+                onError={(error) => {
+                  console.error('Canvas error for 3D model:', taskResult.id, error);
+                  setModelLoadError(true);
+                  setShow3D(false);
+                }}
+              >
+                <ambientLight intensity={0.6} />
+                <directionalLight position={[10, 10, 5]} intensity={1} />
+                <pointLight position={[-10, -10, -5]} intensity={0.5} />
+                
+                <NFT3DModel url={taskResult.model_urls.glb} />
+                <Environment preset="city" />
+                
+                <OrbitControls
+                  enablePan={false}
+                  enableZoom={true}
+                  enableRotate={true}
+                  autoRotate={false}
+                  dampingFactor={0.05}
+                />
+              </Canvas>
+            </Suspense>
+          </ModelErrorBoundary>
+        ) : modelLoadError ? (
+          /* Show error message */
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100">
+            <div className="text-center p-4">
+              <Box className="h-12 w-12 mx-auto text-red-400 mb-2" />
+              <p className="text-xs text-red-600 mb-1">3D model failed to load</p>
+              <p className="text-xs text-red-500">The model file may be expired or corrupted</p>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="mt-2 text-xs text-red-600 hover:text-red-700"
+                onClick={() => {
+                  setModelLoadError(false);
+                  setShow3D(false);
+                }}
+              >
+                Back to image
+              </Button>
+            </div>
+          </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Sparkles className="h-16 w-16 text-neutral-400" />
+          /* Default: show image */
+          taskResult.thumbnail_url ? (
+            <img
+              src={taskResult.thumbnail_url}
+              alt={`3D Model ${taskResult.id}`}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Sparkles className="h-16 w-16 text-neutral-400" />
+            </div>
+          )
+        )}
+        
+        {/* 3D/2D Toggle Button */}
+        {has3DModel && taskResult.thumbnail_url && (
+          <div className="absolute top-2 left-2 z-10">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-12 p-0 bg-white/90 hover:bg-white text-neutral-700 hover:text-neutral-900 text-xs font-medium border border-neutral-200"
+              onClick={handle3DToggle}
+              title={show3D ? "Show image" : "Show 3D model"}
+              disabled={modelLoadError && show3D}
+            >
+              {show3D ? "2D" : "3D"}
+            </Button>
           </div>
         )}
+        
         <div className="absolute top-2 right-2">
-          <Badge variant="secondary" className="text-xs bg-white/80 backdrop-blur-sm">
+          <Badge variant="secondary" className="text-xs bg-blue-600 text-white font-medium shadow-sm">
             Ready to Mint
           </Badge>
         </div>
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-2 left-2" style={{ marginTop: has3DModel && taskResult.thumbnail_url ? '32px' : '0' }}>
           <Badge variant="outline" className="text-xs bg-white/80 backdrop-blur-sm border-neutral-300">
             {taskResult.mode}
           </Badge>
@@ -220,6 +437,7 @@ function MintableModelCard({ taskResult }: { taskResult: any }) {
           {/* 主要铸造按钮 */}
           <NFTMintDialog
             taskResult={taskResult}
+            onMintSuccess={handleMintSuccessLocal}
             trigger={
               <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
                 <Upload className="h-4 w-4 mr-2" />
@@ -279,16 +497,20 @@ export function TNFTPage() {
   const { isConnected, address } = useAccount();
   const { userNFTs, balance, totalSupply, isLoading } = useNFTQuery();
   const [mintableModels, setMintableModels] = useState<any[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  // 客户端挂载检测
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // 从localStorage获取可铸造的模型
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const lastModel = storage.getLastSuccessfulModel();
-      if (lastModel && lastModel.status === 'SUCCEEDED') {
-        // 检查这个模型是否已经被铸造过NFT
-        // 这里可以添加更复杂的逻辑来检查哪些模型已经铸造
-        setMintableModels([lastModel]);
-      }
+      // 使用新的getReadyToMintModels方法获取所有待铸造模型
+      const readyToMintModels = storage.getReadyToMintModels();
+      console.log('📋 Ready to mint models:', readyToMintModels);
+      setMintableModels(readyToMintModels);
     }
   }, []);
 
@@ -297,10 +519,54 @@ export function TNFTPage() {
     setMintableModels(prev => prev.filter(model => model.id !== taskId));
   };
 
+  // 刷新待铸造模型列表
+  const refreshMintableModels = () => {
+    if (typeof window !== 'undefined') {
+      const readyToMintModels = storage.getReadyToMintModels();
+      console.log('🔄 Refreshed ready to mint models:', readyToMintModels);
+      setMintableModels(readyToMintModels);
+    }
+  };
+
+  // 监听localStorage变化，实时更新待铸造列表
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'meshy_all_successful_models' || e.key === 'meshy_minted_models') {
+        refreshMintableModels();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // 定期刷新（防止localStorage事件不触发）
+    const interval = setInterval(refreshMintableModels, 10000); // 每10秒刷新一次
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // 防止hydration错误
+  if (!isClient) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-black text-white">
+        <div className="text-center space-y-6">
+          <div className="mx-auto w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center">
+            <Loader2 className="h-12 w-12 text-gray-400 animate-spin" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-white">Loading...</h1>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-black text-white">
-        <div className="text-center space-y-6 anim-b opacity-0">
+        <div className="text-center space-y-6">
           <div className="mx-auto w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center">
             <Wallet className="h-12 w-12 text-gray-400" />
           </div>
@@ -320,16 +586,6 @@ export function TNFTPage() {
 
   return (
     <div className="flex flex-col gap-8 h-full bg-black text-white">
-      {/* 主标题区域 - 与首页风格一致 */}
-      <div className="text-center space-y-4">
-        <h1 className="text-[4rem] leading-[4rem] anim-r opacity-0 ![animation-delay:200ms] font-bold text-white">
-          MY NFT COLLECTION
-        </h1>
-        <h2 className="text-[2rem] leading-[2rem] anim-r opacity-0 ![animation-delay:300ms] text-gray-400">
-          3D Digital Assets Portfolio
-        </h2>
-      </div>
-
       {/* 主要内容区域 */}
       <div className="flex gap-8 flex-1">
         {/* 左侧 33% - 统计信息 */}
@@ -401,6 +657,45 @@ export function TNFTPage() {
 
           {/* NFT调试工具 */}
           <NFTDebugTools />
+
+          {/* 开发环境：Ready to Mint 调试工具 */}
+          {process.env.NODE_ENV === 'development' && (
+            <Card className="bg-yellow-50 border-yellow-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-yellow-800">
+                  Ready to Mint Debug Tools
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="text-xs text-yellow-700">
+                  All Models: {storage.getAllSuccessfulModels().length} | 
+                  Minted: {storage.getMintedModels().length} | 
+                  Ready: {mintableModels.length}
+                </div>
+                <div className="flex space-x-1">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="text-xs h-6 border-yellow-300"
+                    onClick={refreshMintableModels}
+                  >
+                    Refresh
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="text-xs h-6 border-red-300 text-red-600"
+                    onClick={() => {
+                      storage.clearMintedModels();
+                      refreshMintableModels();
+                    }}
+                  >
+                    Clear Minted
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* 右侧 67% - 分为两个区域 */}
@@ -408,18 +703,12 @@ export function TNFTPage() {
           {/* 可铸造模型区域 */}
           {mintableModels.length > 0 && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-neutral-900">Ready to Mint</h2>
-                <Badge variant="outline" className="border-blue-300 text-blue-700 bg-blue-50">
-                  {mintableModels.length} models
-                </Badge>
-              </div>
-
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {mintableModels.map((model) => (
                   <MintableModelCard
                     key={model.id}
                     taskResult={model}
+                    onMintSuccess={removeMintableModel}
                   />
                 ))}
                 {/* <div className="flex items-center justify-between">

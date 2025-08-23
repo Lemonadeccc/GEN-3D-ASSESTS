@@ -18,9 +18,9 @@ const getAppUrl = () => {
   return process.env.NEXT_PUBLIC_APP_URL || 'https://gen3d.app';
 };
 
-// 构建连接器数组 - 支持MetaMask的多种连接方式
+// 构建连接器数组 - 只支持MetaMask，优化连接方式
 const connectors = [
-  // MetaMask - 专用连接器（用于移动端和深度集成）
+  // MetaMask - 专用连接器（优先使用，支持移动端和深度链接）
   metaMask({
     dappMetadata: {
       name: 'GEN-3D-ASSETS', 
@@ -28,35 +28,11 @@ const connectors = [
       iconUrl: `${getAppUrl()}/favicon.ico`,
     },
   }),
-  // 通用注入钱包连接器（用于浏览器插件）
+  // 通用注入钱包连接器（作为备选，只在确认是MetaMask时使用）
   injected({
     shimDisconnect: true,
   }),
 ];
-
-// 只有在有效的ProjectId时才添加WalletConnect
-if (projectId && projectId !== 'development_project_id_placeholder') {
-  connectors.push(
-    walletConnect({ 
-      projectId,
-      metadata: {
-        name: 'GEN-3D-ASSETS',
-        description: 'AI-powered 3D NFT Platform',
-        url: getAppUrl(),
-        icons: [`${getAppUrl()}/favicon.ico`],
-      },
-      showQrModal: true, // 启用二维码模态框
-    })
-  );
-}
-
-// 添加Coinbase Wallet
-connectors.push(
-  coinbaseWallet({
-    appName: 'GEN-3D-ASSETS',
-    appLogoUrl: `${getAppUrl()}/favicon.ico`,
-  })
-);
 
 export const config = createConfig({
   chains: [sepolia, hardhat],

@@ -226,9 +226,11 @@ const Model3DCanvas = memo(function Model3DCanvas({
 interface SimpleModel3DViewerProps {
   taskResult: TaskStatusResponse;
   className?: string;
+  hideBottomInfo?: boolean;
+  textureTaskId?: string | null;
 }
 
-export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DViewerProps) {
+export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = false, textureTaskId: propTextureTaskId }: SimpleModel3DViewerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [loadStatus, setLoadStatus] = useState<'idle' | 'downloading' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -248,20 +250,39 @@ export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DView
   const [texturePrompt, setTexturePrompt] = useState('');
   const [negativePrompt, setNegativePrompt] = useState('');
   const [enablePbr, setEnablePbr] = useState(true);
-  const [textureTaskId, setTextureTaskId] = useState<string | null>(null);
+  const [textureTaskId, setTextureTaskId] = useState<string | null>(propTextureTaskId || null);
   
-  // 从localStorage恢复纹理任务ID - 在useEffect中处理避免hydration问题
+  // 同步外部传入的textureTaskId
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedTextureTaskId = storage.getTextureTaskId();
-      if (savedTextureTaskId) {
-        setTextureTaskId(savedTextureTaskId);
+    if (propTextureTaskId !== undefined) {
+      setTextureTaskId(propTextureTaskId);
+      console.log('📍 Texture task ID updated from props:', propTextureTaskId);
+      
+      // 如果有纹理任务ID，保存到localStorage
+      if (propTextureTaskId) {
+        storage.saveTextureTaskId(propTextureTaskId);
       }
     }
-  }, []);
-
-  // 🔥 当新任务开始时，清除旧的纹理任务
+  }, [propTextureTaskId]);
+  
+  // 从localStorage恢复纹理任务ID - 只在没有传入props时使用
   useEffect(() => {
+    if (typeof window !== 'undefined' && !propTextureTaskId) {
+      const savedTextureTaskId = storage.getTextureTaskId();
+      if (savedTextureTaskId && !textureTaskId) {
+        setTextureTaskId(savedTextureTaskId);
+        console.log('🔄 Restored texture task ID from storage:', savedTextureTaskId);
+      }
+    }
+  }, [propTextureTaskId]);
+
+  // 🔥 当新任务开始时，清除旧的纹理任务 - 但不要清除通过props传入的纹理任务
+  useEffect(() => {
+    // 如果有通过props传入的纹理任务ID，不要清除它
+    if (propTextureTaskId) {
+      return;
+    }
+    
     // 如果当前显示的是新任务，清除可能存在的旧纹理任务
     const savedTextureTaskId = storage.getTextureTaskId();
     if (savedTextureTaskId && taskResult.mode === 'preview') {
@@ -269,7 +290,7 @@ export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DView
       setTextureTaskId(null);
       storage.saveTextureTaskId(''); // 清空
     }
-  }, [taskResult.id, taskResult.mode]);
+  }, [taskResult.id, taskResult.mode, propTextureTaskId]);
 
   // 🔥 检测任务ID变化，重置所有相关状态
   const [lastTaskId, setLastTaskId] = useState<string | null>(null);
@@ -288,15 +309,15 @@ export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DView
       setCurrentLoadedUrl(null);
       setErrorMessage('');
       
-      // 如果是新的preview任务，清除纹理任务
-      if (taskResult.mode === 'preview') {
+      // 如果是新的preview任务，清除纹理任务 - 但不要清除通过props传入的纹理任务
+      if (taskResult.mode === 'preview' && !propTextureTaskId) {
         setTextureTaskId(null);
         storage.saveTextureTaskId('');
       }
       
       setLastTaskId(taskResult.id);
     }
-  }, [taskResult.id, taskResult.mode, lastTaskId, localModelUrl]);
+  }, [taskResult.id, taskResult.mode, lastTaskId, localModelUrl, propTextureTaskId]);
   
   // 使用回调函数避免重渲染
   const handleTexturePromptChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -314,6 +335,15 @@ export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DView
   // 纹理生成 hooks
   const textToTextureMutation = useTextToTexture();
   const { data: textureTaskStatus } = useTextureTaskStatus(textureTaskId);
+  
+  // 调试日志
+  useEffect(() => {
+    console.log('🔍 Texture loading state:', {
+      textureTaskId,
+      textureTaskStatus: textureTaskStatus?.status,
+      hasTextureUrls: !!textureTaskStatus?.model_urls?.glb
+    });
+  }, [textureTaskId, textureTaskStatus]);
   
   // 记忆化纹理任务状态，只有关键字段变化时才重新计算
   const memoizedTextureStatus = useMemo(() => {
@@ -351,9 +381,6 @@ export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DView
     if (memoizedTextureStatus && memoizedTextureStatus.status === 'SUCCEEDED' && memoizedTextureStatus.model_urls?.glb) {
       const newModelUrl = memoizedTextureStatus.model_urls.glb;
       
-      // 🚫 不要保存纹理任务数据到 lastSuccessfulModel，避免覆盖主任务
-      // storage.saveLastSuccessfulModel(memoizedTextureStatus); // 删除这行
-      
       // 只有当URL真正改变时才重新加载
       if (newModelUrl !== currentLoadedUrl) {
         console.log('✅ 纹理生成完成，新模型URL:', newModelUrl);
@@ -371,13 +398,50 @@ export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DView
       } else {
         console.log('模型URL未改变，跳过重新加载');
       }
+    } else if (!textureTaskId && currentLoadedUrl !== bestModel?.url) {
+      // 当清除纹理ID时，加载原始模型
+      console.log('🔄 No texture ID, loading original model');
+      if (bestModel?.url) {
+        if (localModelUrl) {
+          URL.revokeObjectURL(localModelUrl);
+        }
+        setLocalModelUrl(null);
+        setLoadStatus('idle');
+        setCurrentLoadedUrl(bestModel.url);
+        handleDownloadAndLoad(bestModel.url);
+      }
     }
   }, [
-    // 只监听真正影响模型加载的字段
-    memoizedTextureStatus?.status === 'SUCCEEDED', 
-    memoizedTextureStatus?.model_urls?.glb, 
-    currentLoadedUrl
+    // 监听所有相关变化
+    memoizedTextureStatus?.status,
+    memoizedTextureStatus?.model_urls?.glb,
+    currentLoadedUrl,
+    textureTaskId,
+    bestModel?.url
   ]);
+  
+  // 🔥 新增：当textureTaskId变化且纹理任务已完成时，立即加载纹理模型
+  useEffect(() => {
+    if (textureTaskId && memoizedTextureStatus?.status === 'SUCCEEDED' && memoizedTextureStatus?.model_urls?.glb) {
+      const textureModelUrl = memoizedTextureStatus.model_urls.glb;
+      
+      // 如果纹理模型URL与当前加载的URL不同，重新加载
+      if (textureModelUrl !== currentLoadedUrl) {
+        console.log('🎨 Loading historical texture model:', textureModelUrl);
+        
+        // 清理当前模型
+        if (localModelUrl) {
+          URL.revokeObjectURL(localModelUrl);
+        }
+        
+        // 加载纹理模型
+        setLocalModelUrl(null);
+        setLoadStatus('idle');
+        setCurrentLoadedUrl(textureModelUrl);
+        handleDownloadAndLoad(textureModelUrl);
+      }
+    }
+  }, [textureTaskId, memoizedTextureStatus?.status, memoizedTextureStatus?.model_urls?.glb, currentLoadedUrl]);
 
   // 自动下载GLB模型
   useEffect(() => {
@@ -481,14 +545,16 @@ export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DView
   };
 
   const ViewerContent = () => (
-    <div className="relative h-full min-h-[600px]">
+    <div className="relative h-full">
       {/* 下载状态显示 */}
       {loadStatus === 'downloading' && downloadState && (
         <div className="absolute top-4 left-4 z-10">
           <div className="bg-background/90 backdrop-blur-sm rounded-lg p-3 min-w-[200px]">
             <div className="flex items-center space-x-2 mb-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">下载 GLB 模型中...</span>
+              <span className="text-sm">
+                {memoizedTextureStatus?.status === 'IN_PROGRESS' ? 'Loading textured model...' : 'Loading 3D model...'}
+              </span>
             </div>
             <Progress value={downloadState.progress} className="w-full" />
             <div className="text-xs text-muted-foreground mt-1">
@@ -511,19 +577,23 @@ export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DView
         </div>
       )}
 
-      {/* 3D Canvas */}
-      <Model3DCanvas 
-        localModelUrl={localModelUrl}
-        onModelLoad={handleModelLoad}
-        onModelError={handleModelError}
-      />
+      {/* 3D Canvas - 添加高度限制 */}
+      <div className="w-full h-full">
+        <Model3DCanvas 
+          localModelUrl={localModelUrl}
+          onModelLoad={handleModelLoad}
+          onModelError={handleModelError}
+        />
+      </div>
 
       {/* 加载指示器 */}
       {loadStatus === 'loading' && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-background/80 backdrop-blur-sm rounded-lg p-4 flex items-center space-x-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm">加载 GLB 模型中...</span>
+            <span className="text-sm">
+              {memoizedTextureStatus?.status === 'IN_PROGRESS' ? 'Loading textured model...' : 'Loading 3D model...'}
+            </span>
           </div>
         </div>
       )}
@@ -554,91 +624,139 @@ export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DView
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => currentModelUrl && window.open(currentModelUrl, '_blank')}
+            onClick={async () => {
+              console.log('🔽 智能下载开始');
+              
+              // 如果有纹理任务且成功，下载纹理版本
+              if (memoizedTextureStatus?.status === 'SUCCEEDED' && memoizedTextureStatus.model_urls?.glb) {
+                console.log('📦 下载带纹理的GLB模型:', memoizedTextureStatus.model_urls.glb);
+                window.open(memoizedTextureStatus.model_urls.glb, '_blank');
+                
+                // 同时下载纹理贴图
+                if (memoizedTextureStatus.texture_urls?.[0]) {
+                  const textures = memoizedTextureStatus.texture_urls[0];
+                  setTimeout(() => {
+                    if (textures.base_color) {
+                      console.log('🖼️ 下载基础色贴图');
+                      window.open(textures.base_color, '_blank');
+                    }
+                  }, 1000);
+                  
+                  setTimeout(() => {
+                    if (textures.normal) {
+                      console.log('🖼️ 下载法线贴图');
+                      window.open(textures.normal, '_blank');
+                    }
+                  }, 2000);
+                  
+                  setTimeout(() => {
+                    if (textures.roughness) {
+                      console.log('🖼️ 下载粗糙度贴图');
+                      window.open(textures.roughness, '_blank');
+                    }
+                  }, 3000);
+                  
+                  setTimeout(() => {
+                    if (textures.metallic) {
+                      console.log('🖼️ 下载金属度贴图');
+                      window.open(textures.metallic, '_blank');
+                    }
+                  }, 4000);
+                }
+              } 
+              // 否则下载原始模型
+              else if (taskResult.model_urls?.glb) {
+                console.log('📦 下载原始GLB模型（白模）:', taskResult.model_urls.glb);
+                window.open(taskResult.model_urls.glb, '_blank');
+              }
+            }}
             className="h-8 w-8 p-0"
-            title="下载模型"
+            title={memoizedTextureStatus?.status === 'SUCCEEDED' ? "下载模型和纹理" : "下载模型"}
+            disabled={!taskResult.model_urls?.glb}
           >
             <Download className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* 模型信息覆盖层 */}
-      <div className="absolute bottom-4 left-4 right-4">
-        <div className="bg-background/90 backdrop-blur-sm rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <Badge variant="secondary" className="mb-2">
-                <Eye className="h-3 w-3 mr-1" />
-                3D 预览 (GLB)
-              </Badge>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <div>任务ID: {taskResult.id}</div>
-                <div>状态: {loadStatus === 'success' ? '加载完成' : loadStatus === 'loading' ? '加载中' : loadStatus === 'downloading' ? '下载中' : '准备中'}</div>
-                {memoizedTextureStatus && (
-                  <div className="mt-2 p-2 bg-blue-50 rounded border">
-                    <div className="flex items-center space-x-2 text-blue-800">
-                      <Palette className="h-3 w-3" />
-                      <span className="text-xs font-medium">纹理生成: {memoizedTextureStatus.status}</span>
+      {/* 模型信息覆盖层 - 根据hideBottomInfo条件渲染 */}
+      {!hideBottomInfo && (
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="bg-background/90 backdrop-blur-sm rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <Badge variant="secondary" className="mb-2">
+                  <Eye className="h-3 w-3 mr-1" />
+                  3D 预览 (GLB)
+                </Badge>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <div>任务ID: {taskResult.id}</div>
+                  <div>状态: {loadStatus === 'success' ? '加载完成' : loadStatus === 'loading' ? '加载中' : loadStatus === 'downloading' ? '下载中' : '准备中'}</div>
+                  {memoizedTextureStatus && (
+                    <div className="mt-2 p-2 bg-blue-50 rounded border">
+                      <div className="flex items-center space-x-2 text-blue-800">
+                        <Palette className="h-3 w-3" />
+                        <span className="text-xs font-medium">纹理生成: {memoizedTextureStatus.status}</span>
+                      </div>
+                      {memoizedTextureStatus.status === 'IN_PROGRESS' && (
+                        <div className="mt-1">
+                          <Progress value={memoizedTextureStatus.progress} className="h-1" />
+                          <div className="text-xs text-blue-600 mt-1">{memoizedTextureStatus.progress}%</div>
+                        </div>
+                      )}
+                      {memoizedTextureStatus && memoizedTextureStatus.status === 'SUCCEEDED' && (
+                        <div className="text-xs text-green-700 mt-1 flex items-center justify-between">
+                          <span>✅ 纹理生成完成</span>
+                          <button
+                            className="text-blue-600 hover:text-blue-700 text-xs underline cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('🔄 Regenerating texture, clearing all texture data');
+                              
+                              // 清除所有纹理状态
+                              setTextureTaskId(null);
+                              setTexturePrompt('');
+                              setNegativePrompt('');
+                              
+                              // 清除localStorage中的纹理任务ID  
+                              storage.saveTextureTaskId('');
+                              
+                              // 关闭纹理对话框如果打开着
+                              setShowRetextureDialog(false);
+                              
+                              // 重置模型URL到原始版本
+                              setCurrentLoadedUrl(taskResult.model_urls?.glb || null);
+                              
+                              // 重新加载原始模型
+                              if (taskResult.model_urls?.glb) {
+                                handleDownloadAndLoad(taskResult.model_urls.glb);
+                              }
+                            }}
+                          >
+                            重新生成
+                          </button>
+                        </div>
+                      )}
+                      {memoizedTextureStatus && memoizedTextureStatus.status === 'FAILED' && (
+                        <div className="text-xs text-red-700 mt-1">❌ 纹理生成失败</div>
+                      )}
                     </div>
-                    {memoizedTextureStatus.status === 'IN_PROGRESS' && (
-                      <div className="mt-1">
-                        <Progress value={memoizedTextureStatus.progress} className="h-1" />
-                        <div className="text-xs text-blue-600 mt-1">{memoizedTextureStatus.progress}%</div>
-                      </div>
-                    )}
-                    {memoizedTextureStatus && memoizedTextureStatus.status === 'SUCCEEDED' && (
-                      <div className="text-xs text-green-700 mt-1 flex items-center justify-between">
-                        <span>✅ 纹理生成完成</span>
-                        <button
-                          className="text-blue-600 hover:text-blue-700 text-xs underline cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log('🔄 Regenerating texture, clearing all texture data');
-                            
-                            // 清除所有纹理状态
-                            setTextureTaskId(null);
-                            setTexturePrompt('');
-                            setNegativePrompt('');
-                            
-                            // 清除localStorage中的纹理任务ID  
-                            storage.saveTextureTaskId('');
-                            
-                            // 关闭纹理对话框如果打开着
-                            setShowRetextureDialog(false);
-                            
-                            // 重置模型URL到原始版本
-                            setCurrentLoadedUrl(taskResult.model_urls?.glb || null);
-                            
-                            // 重新加载原始模型
-                            if (taskResult.model_urls?.glb) {
-                              handleDownloadAndLoad(taskResult.model_urls.glb);
-                            }
-                          }}
-                        >
-                          重新生成
-                        </button>
-                      </div>
-                    )}
-                    {memoizedTextureStatus && memoizedTextureStatus.status === 'FAILED' && (
-                      <div className="text-xs text-red-700 mt-1">❌ 纹理生成失败</div>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => currentModelUrl && window.open(currentModelUrl, '_blank')}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                下载
+              </Button>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => currentModelUrl && window.open(currentModelUrl, '_blank')}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              下载
-            </Button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 
@@ -662,230 +780,8 @@ export function SimpleModel3DViewer({ taskResult, className }: SimpleModel3DView
           <Badge variant="outline">GLB</Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0 h-[900px] flex flex-col">
-        <div className="flex-1 min-h-[600px]">
-          <ViewerContent />
-        </div>
-        
-        {/* 模型详细信息 */}
-        <div className="flex-shrink-0 border-t bg-muted/30">
-          <div className="p-4 space-y-3 max-h-[280px] overflow-y-auto">{/* 增加高度限制 */}
-            <div className="flex items-center space-x-2">
-              <Info className="h-4 w-4 text-blue-500" />
-              <span className="font-medium text-sm">模型信息</span>
-            </div>
-          
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="space-y-1">
-              <div className="text-muted-foreground text-xs">模型ID</div>
-              <div className="font-medium text-xs break-all">{taskResult.id}</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-muted-foreground text-xs">艺术风格</div>
-              <div className="font-medium text-xs">{taskResult.art_style}</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-muted-foreground text-xs">生成模式</div>
-              <div className="font-medium text-xs">
-                {taskResult.mode}
-                {memoizedTextureStatus?.status === 'SUCCEEDED' && (
-                  <Badge variant="secondary" className="ml-1 text-xs px-1">已加纹理</Badge>
-                )}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-muted-foreground text-xs">当前状态</div>
-              <div className="font-medium text-xs">
-                {memoizedTextureStatus?.status === 'SUCCEEDED' ? 
-                  '带纹理模型' : 
-                  taskResult.mode === 'refine' ? '精细模型' : '预览模型'
-                }
-              </div>
-            </div>
-          </div>
-
-          {/* 下载按钮区域 */}
-          <div className="space-y-2">
-            {/* 智能下载按钮 - 自动下载最合适的文件 */}
-            <div className="flex gap-2">
-              <Button 
-                variant="default"
-                size="sm" 
-                onClick={async () => {
-                  console.log('🔽 智能下载开始');
-                  
-                  // 如果有纹理任务且成功，下载纹理版本
-                  if (memoizedTextureStatus?.status === 'SUCCEEDED' && memoizedTextureStatus.model_urls?.glb) {
-                    console.log('📦 下载带纹理的GLB模型:', memoizedTextureStatus.model_urls.glb);
-                    window.open(memoizedTextureStatus.model_urls.glb, '_blank');
-                    
-                    // 同时下载纹理贴图
-                    if (memoizedTextureStatus.texture_urls?.[0]) {
-                      const textures = memoizedTextureStatus.texture_urls[0];
-                      setTimeout(() => {
-                        if (textures.base_color) {
-                          console.log('🖼️ 下载基础色贴图');
-                          window.open(textures.base_color, '_blank');
-                        }
-                      }, 1000);
-                      
-                      setTimeout(() => {
-                        if (textures.normal) {
-                          console.log('🖼️ 下载法线贴图');
-                          window.open(textures.normal, '_blank');
-                        }
-                      }, 2000);
-                      
-                      setTimeout(() => {
-                        if (textures.roughness) {
-                          console.log('🖼️ 下载粗糙度贴图');
-                          window.open(textures.roughness, '_blank');
-                        }
-                      }, 3000);
-                      
-                      setTimeout(() => {
-                        if (textures.metallic) {
-                          console.log('🖼️ 下载金属度贴图');
-                          window.open(textures.metallic, '_blank');
-                        }
-                      }, 4000);
-                    }
-                  } 
-                  // 否则下载原始模型
-                  else if (taskResult.model_urls?.glb) {
-                    console.log('📦 下载原始GLB模型（白模）:', taskResult.model_urls.glb);
-                    window.open(taskResult.model_urls.glb, '_blank');
-                  }
-                }}
-                disabled={!taskResult.model_urls?.glb}
-                className="flex-1"
-                title="智能下载：自动下载模型和纹理文件"
-              >
-                <Download className="h-3 w-3 mr-1" />
-                智能下载
-                {memoizedTextureStatus?.status === 'SUCCEEDED' ? 
-                  <Badge variant="secondary" className="ml-1 text-xs px-1">模型+纹理</Badge> :
-                  <Badge variant="outline" className="ml-1 text-xs px-1">白模</Badge>
-                }
-              </Button>
-            </div>
-            
-            {/* 
-            注释掉的其他下载选项
-            <div className="flex flex-wrap gap-1">
-              {taskResult.model_urls?.fbx && (
-                <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.fbx, '_blank')}>
-                  <Download className="h-3 w-3 mr-1" />
-                  FBX
-                </Button>
-              )}
-              {taskResult.model_urls?.obj && (
-                <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.obj, '_blank')}>
-                  <Download className="h-3 w-3 mr-1" />
-                  OBJ
-                </Button>
-              )}
-              {taskResult.model_urls?.usdz && (
-                <Button variant="outline" size="sm" onClick={() => window.open(taskResult.model_urls.usdz, '_blank')}>
-                  <Download className="h-3 w-3 mr-1" />
-                  USDZ
-                </Button>
-              )}
-              {taskResult.thumbnail_url && (
-                <Button variant="outline" size="sm" onClick={() => window.open(taskResult.thumbnail_url, '_blank')}>
-                  <Download className="h-3 w-3 mr-1" />
-                  缩略图
-                </Button>
-              )}
-              {taskResult.video_url && (
-                <Button variant="outline" size="sm" onClick={() => window.open(taskResult.video_url, '_blank')}>
-                  <Download className="h-3 w-3 mr-1" />
-                  视频
-                </Button>
-              )}
-            </div>
-            
-            
-            {(textureTaskStatus?.texture_urls || taskResult.texture_urls) && (
-              <div className="mt-2 p-2 bg-blue-50 rounded border">
-                <div className="text-xs font-medium text-blue-800 mb-1 flex items-center">
-                  <Palette className="h-3 w-3 mr-1" />
-                  纹理贴图下载
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {(textureTaskStatus?.texture_urls?.[0] || taskResult.texture_urls?.[0]) && (
-                    <>
-                      {(textureTaskStatus?.texture_urls?.[0]?.base_color || taskResult.texture_urls?.[0]?.base_color) && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => window.open(
-                            textureTaskStatus?.texture_urls?.[0]?.base_color || taskResult.texture_urls?.[0]?.base_color!, 
-                            '_blank'
-                          )}
-                          className="text-xs px-2 py-1"
-                        >
-                          基础色
-                        </Button>
-                      )}
-                      {(textureTaskStatus?.texture_urls?.[0]?.normal || taskResult.texture_urls?.[0]?.normal) && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => window.open(
-                            textureTaskStatus?.texture_urls?.[0]?.normal || taskResult.texture_urls?.[0]?.normal!, 
-                            '_blank'
-                          )}
-                          className="text-xs px-2 py-1"
-                        >
-                          法线贴图
-                        </Button>
-                      )}
-                      {(textureTaskStatus?.texture_urls?.[0]?.roughness || taskResult.texture_urls?.[0]?.roughness) && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => window.open(
-                            textureTaskStatus?.texture_urls?.[0]?.roughness || taskResult.texture_urls?.[0]?.roughness!, 
-                            '_blank'
-                          )}
-                          className="text-xs px-2 py-1"
-                        >
-                          粗糙度
-                        </Button>
-                      )}
-                      {(textureTaskStatus?.texture_urls?.[0]?.metallic || taskResult.texture_urls?.[0]?.metallic) && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => window.open(
-                            textureTaskStatus?.texture_urls?.[0]?.metallic || taskResult.texture_urls?.[0]?.metallic!, 
-                            '_blank'
-                          )}
-                          className="text-xs px-2 py-1"
-                        >
-                          金属度
-                        </Button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-            */}
-            
-            {/* 下载状态提示 */}
-            {memoizedTextureStatus?.status === 'SUCCEEDED' && (
-              <div className="text-xs text-green-700 p-2 bg-green-50 rounded border">
-                <div className="flex items-center">
-                  <Download className="h-3 w-3 mr-1" />
-                  <span>点击智能下载将获得：GLB模型文件 + 所有纹理贴图</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        </div>
+      <CardContent className="p-0 h-[500px]">
+        <ViewerContent />
       </CardContent>
     </Card>
     

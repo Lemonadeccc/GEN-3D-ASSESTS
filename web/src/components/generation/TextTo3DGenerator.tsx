@@ -94,6 +94,8 @@ export function TextTo3DGenerator({ onTaskCreated }: GeneratorProps) {
     // 只保存当前任务的成功状态
     if (taskStatus.status === 'SUCCEEDED') {
       storage.saveLastSuccessfulModel(taskStatus);
+      // 新增：添加到所有成功模型列表中
+      storage.addSuccessfulModel(taskStatus);
       console.log('💾 Saved successful model data for current task:', taskStatus.id);
     }
   }, [taskStatus, currentTaskId]);
