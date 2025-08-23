@@ -51,7 +51,7 @@ GEN-3D-ASSETS 是一个基于 AI 的 3D 资产 NFT 平台，用户可以通过�
 
 ### 环境要求
 
-- Node.js 18+ 和 pnpm 8+
+- Node.js 22+ 和 pnpm 10+
 - Foundry 工具链
 - Git 版本控制
 
@@ -103,6 +103,20 @@ pnpm run test:contracts
 ```
 
 访问 `http://localhost:3000` 查看应用。
+
+示例 Generate Model prompt:
+
+```
+A full-body humanoid combat robot in a dynamic kneeling pose, one hand resting on its knee, the other holding a rifle. Design features: mechanical exposed joints, hydraulic pistons on the legs, armored plates on the chest and shoulders, a detailed head with a single visor-like optic sensor, and power cables snaking from its back to its torso. Model must be watertight and have good topology for animation.
+```
+
+示例 Generate Texture prompt:
+
+```
+PBR texture, photorealistic, cyberpunk mech. Main armor is matte military green with scratched paint revealing dark gray metal underneath. Silver polished metal for the internal mechanics and pistons. The visor glows with a bright neon orange light. Grease stains around joints, oil streaks on metal parts, and dirt dust accumulated on feet and lower legs. Dramatic rim lighting, studio render, 8k.
+```
+
+经preiview生成Model后才可选择refine精炼模型。
 
 ## 📁 项目结构
 
@@ -266,7 +280,7 @@ forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 
 1. Fork 仓库
 2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+3. 提交更改 (`pnpm commit`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 开启 Pull Request
 
@@ -274,18 +288,9 @@ forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 
 本项目基于 MIT 许可证开源 - 查看 [LICENSE](./LICENSE) 文件了解详情。
 
-## 🔗 相关链接
-
-- [实施计划](./IMPLEMENTATION_PLAN.md)
-- [API 文档](./API_SPECIFICATION.md)
-- [部署指南](./DEPLOYMENT_GUIDE.md)
-- [前端架构](./FRONTEND_ARCHITECTURE.md)
-- [技术栈分析](./TECHNOLOGY_STACK_ANALYSIS.md)
-
 ## 📞 支持与联系
 
-- 📧 邮箱: support@gen3dassets.com
-- 💬 Discord: [加入我们的社区](https://discord.gg/gen3dassets)
+- 📧 邮箱: zwjhb12@163.com
 - 🐛 问题反馈: [GitHub Issues](https://github.com/your-username/GEN-3D-ASSETS/issues)
 
 ## 📈 最新更新
