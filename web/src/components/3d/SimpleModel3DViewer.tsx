@@ -41,6 +41,40 @@ const SimpleGLBModel = memo(function SimpleGLBModel({ url, onLoad, onError }: { 
     }
   }, [gltf, onLoad, url]);
 
+  // Cleanup to prevent GPU memory leaks when url changes or component unmounts
+  useEffect(() => {
+    return () => {
+      try {
+        if (gltf && (gltf as any).scene) {
+          (gltf as any).scene.traverse((obj: any) => {
+            if (obj.isMesh) {
+              if (obj.geometry) obj.geometry.dispose();
+              if (obj.material) {
+                const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+                mats.forEach((m: any) => {
+                  if (m.map) m.map.dispose();
+                  if (m.normalMap) m.normalMap.dispose();
+                  if (m.roughnessMap) m.roughnessMap.dispose();
+                  if (m.metalnessMap) m.metalnessMap.dispose();
+                  if (m.emissiveMap) m.emissiveMap.dispose();
+                  if (m.dispose) m.dispose();
+                });
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('GLTF dispose warning:', e);
+      }
+      try {
+        // Clear Drei GLTF cache for this url (blob URLs are unique and can pile up)
+        (useGLTF as any).clear?.(url);
+      } catch (e) {
+        // ignore
+      }
+    };
+  }, [gltf, url]);
+
   useFrame(() => {
     if (modelRef.current) {
       modelRef.current.rotation.y += 0.01;
@@ -192,10 +226,9 @@ const Model3DCanvas = memo(function Model3DCanvas({
     <Canvas
       camera={{ position: [0, 0, 5], fov: 45 }}
       className="rounded-lg"
-      dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
+      dpr={[1, 1]}
+      gl={{ antialias: false, alpha: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
       onCreated={({ gl }) => {
-        gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         console.log('Simple Canvas created successfully');
         const canvas = gl.domElement as HTMLCanvasElement;
         const onLost = (e: Event) => {
@@ -209,6 +242,15 @@ const Model3DCanvas = memo(function Model3DCanvas({
         };
         canvas.addEventListener('webglcontextlost', onLost as EventListener, false);
         canvas.addEventListener('webglcontextrestored', onRestored as EventListener, false);
+        // Optional: remove listeners when renderer is disposed
+        const dispose = (gl as any).dispose;
+        (gl as any).dispose = () => {
+          try {
+            canvas.removeEventListener('webglcontextlost', onLost as EventListener, false);
+            canvas.removeEventListener('webglcontextrestored', onRestored as EventListener, false);
+          } catch {}
+          if (dispose) dispose.call(gl);
+        };
       }}
       onError={(error) => {
         console.error('Simple Canvas error:', error);
@@ -224,7 +266,7 @@ const Model3DCanvas = memo(function Model3DCanvas({
         ) : (
           <FallbackModel />
         )}
-        <Environment preset="city" />
+        <Environment preset="city" resolution={64 as any} />
       </Suspense>
       
       <OrbitControls

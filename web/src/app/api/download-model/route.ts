@@ -18,10 +18,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing model URL' }, { status: 400 });
   }
 
-  if (!MESHY_API_KEY) {
-    console.error('❌ API Route - Missing API key');
-    return NextResponse.json({ error: 'Missing API key' }, { status: 500 });
-  }
+  // 不强制要求 API KEY：对于已签名的公开URL（带 Signature/Key-Pair-Id）通常无需鉴权
 
   try {
     console.log('📡 API Route - Starting streaming download for:', modelUrl);
@@ -33,13 +30,21 @@ export async function GET(request: NextRequest) {
       controller.abort();
     }, 300000); // 300秒超时（5分钟）
 
-    const response = await fetch(modelUrl, {
-      headers: {
-        Authorization: `Bearer ${MESHY_API_KEY}`,
-        'User-Agent': 'NextJS-Proxy/1.0',
-      },
+    // 先尝试无鉴权直连；若 401 且有 KEY 再带鉴权重试
+    let response = await fetch(modelUrl, {
+      headers: { 'User-Agent': 'NextJS-Proxy/1.0' },
       signal: controller.signal,
     });
+    if (response.status === 401 && MESHY_API_KEY) {
+      console.warn('🔁 Unauthorized without key, retrying with Authorization header');
+      response = await fetch(modelUrl, {
+        headers: {
+          Authorization: `Bearer ${MESHY_API_KEY}`,
+          'User-Agent': 'NextJS-Proxy/1.0',
+        },
+        signal: controller.signal,
+      });
+    }
 
     // 清除超时定时器
     clearTimeout(timeoutId);

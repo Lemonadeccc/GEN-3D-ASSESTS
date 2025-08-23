@@ -4,10 +4,10 @@ import { CustomWalletConnect } from '@/components/web3/CustomWalletConnect';
 import { useAccount, useDisconnect } from 'wagmi';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
+import { useLogoAnimation } from '@/store/logoAnimationStore';
 import { AnimatedLogoCube } from '@/components/3d/AnimatedLogoCube';
 import LogoErrorBoundary from '@/components/3d/LogoErrorBoundary';
-import { useLogoAnimation } from '@/store/logoAnimationStore';
 import { useGlobalLogoEvents } from '@/hooks/useLogoAnimation';
 import {
   DropdownMenu,
@@ -19,6 +19,28 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut /*, Settings, Coins, User*/ } from 'lucide-react';
 import { toast } from 'sonner';
+
+// 自动根据容器大小适配正交相机缩放，确保立方体完整显示
+function FitOrthoZoom() {
+  const { camera, size } = useThree();
+  const { isHovering } = useLogoAnimation();
+  useEffect(() => {
+    // 估算Logo立方体的包围盒：宽高约为2
+    // 考虑旋转最大对角（~√2）与hover放大（~1.2）以及额外边距，综合放大系数取 ~2.0
+    const safetyFactor = 2.0; // 如仍裁剪可调大
+    const worldWidth = 2 * safetyFactor;
+    const worldHeight = 2 * safetyFactor;
+    // 对于OrthographicCamera，zoom = 像素尺寸 / 期望的世界尺寸
+    const zoomW = size.width / worldWidth;
+    const zoomH = size.height / worldHeight;
+    // 取较小的缩放以完整显示
+    // @ts-ignore - camera为正交相机
+    camera.zoom = Math.min(zoomW, zoomH);
+    camera.position.z = 10;
+    camera.updateProjectionMatrix();
+  }, [camera, size.width, size.height, isHovering]);
+  return null;
+}
 
 export function TNavigation() {
   const { address, isConnected, connector } = useAccount();
@@ -62,9 +84,23 @@ export function TNavigation() {
             {isMounted && (
               <LogoErrorBoundary>
                 <Canvas 
-                  camera={{ position: [0, 0, 6], fov: 50 }}
-                  gl={{ alpha: true, antialias: true }}
+                  orthographic
+                  camera={{ position: [0, 0, 10], zoom: 24, near: 0.1, far: 100 }}
+                  dpr={[1, 1.5]}
+                  gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+                  onCreated={({ gl }) => {
+                    try {
+                      // Improve visual fidelity for logo canvas
+                      // @ts-ignore - be tolerant across three versions
+                      gl.outputColorSpace = (gl as any).outputColorSpace || (window as any).THREE?.SRGBColorSpace;
+                      // @ts-ignore
+                      gl.toneMapping = (window as any).THREE?.ACESFilmicToneMapping ?? (gl as any).toneMapping;
+                      // @ts-ignore
+                      gl.toneMappingExposure = 1.0;
+                    } catch {}
+                  }}
                 >
+                  <FitOrthoZoom />
                   <ambientLight intensity={0.6} />
                   <pointLight position={[10, 10, 10]} intensity={0.3} />
                   <AnimatedLogoCube />

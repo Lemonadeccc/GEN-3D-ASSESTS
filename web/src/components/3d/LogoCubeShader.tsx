@@ -7,9 +7,10 @@ import * as THREE from 'three';
 interface LogoCubeShaderProps {
   time?: number;
   flowSpeed?: number;
+  deformAmplitude?: number; // 控制是否对顶点做轻微形变，0表示关闭
 }
 
-export function LogoCubeShader({ time = 0, flowSpeed = 1.0 }: LogoCubeShaderProps) {
+export function LogoCubeShader({ time = 0, flowSpeed = 1.0, deformAmplitude = 0 }: LogoCubeShaderProps) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
   useFrame((state) => {
@@ -17,6 +18,7 @@ export function LogoCubeShader({ time = 0, flowSpeed = 1.0 }: LogoCubeShaderProp
       const currentTime = state.clock.elapsedTime;
       materialRef.current.uniforms.time.value = currentTime;
       materialRef.current.uniforms.flowSpeed.value = flowSpeed;
+      materialRef.current.uniforms.deformAmplitude.value = deformAmplitude;
     }
   });
 
@@ -27,6 +29,7 @@ export function LogoCubeShader({ time = 0, flowSpeed = 1.0 }: LogoCubeShaderProp
       uniforms={{
         time: { value: 0 },
         flowSpeed: { value: flowSpeed },
+        deformAmplitude: { value: deformAmplitude },
         // 简洁的项目配色方案 - 以白色为主
         colorBase: { value: new THREE.Color('#f8fafc') },    // 浅灰白 (slate-50)
         colorWhite: { value: new THREE.Color('#ffffff') },   // 纯白色
@@ -39,16 +42,19 @@ export function LogoCubeShader({ time = 0, flowSpeed = 1.0 }: LogoCubeShaderProp
         varying vec3 vPosition;
         varying vec3 vNormal;
         uniform float time;
+        uniform float deformAmplitude;
         
         void main() {
           vUv = uv;
           vPosition = position;
           vNormal = normalize(normalMatrix * normal);
           
-          // 轻微的顶点动画
+          // 轻微的顶点动画（可关闭）
           vec3 pos = position;
-          pos.x += sin(position.y * 4.0 + time * 1.5) * 0.005;
-          pos.y += cos(position.x * 4.0 + time * 1.2) * 0.005;
+          if (deformAmplitude > 0.0) {
+            pos.x += sin(position.y * 4.0 + time * 1.5) * deformAmplitude;
+            pos.y += cos(position.x * 4.0 + time * 1.2) * deformAmplitude;
+          }
           
           gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
         }
@@ -95,6 +101,12 @@ export function LogoCubeShader({ time = 0, flowSpeed = 1.0 }: LogoCubeShaderProp
             color = mix(colorWhite, colorBlue, t * 0.2);
           }
           
+          // 片元层面的流光（不改变几何形状）
+          // 沿着 vUv 的 Y 方向缓慢移动的一道高光带
+          float band = sin(uv.y * 10.0 + time * flowSpeed * 2.0);
+          float flow = smoothstep(0.2, 0.6, band) * 0.08; // 强度较低，微弱流光
+          color += colorBlue * flow;
+
           // 边缘轻微发光
           float edgeGlow = 1.0 - smoothstep(0.0, 0.8, dist);
           color = mix(color, colorWhite, edgeGlow * 0.2);
@@ -105,9 +117,9 @@ export function LogoCubeShader({ time = 0, flowSpeed = 1.0 }: LogoCubeShaderProp
           
           // 边缘蓝色强调
           float fresnel = 1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0)));
-          color = mix(color, colorAccent, fresnel * 0.1);
+          color = mix(color, colorAccent, fresnel * 0.08);
           
-          gl_FragColor = vec4(color, 0.9);
+          gl_FragColor = vec4(color, 0.95);
         }
       `}
     />

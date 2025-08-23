@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { useBalance, useTextTo3D, useTaskStatus, useTextToTexture, useTextureTaskStatus } from '@/hooks/use-meshy';
 import { TextTo3DParams, TaskStatusResponse } from '@/lib/meshy/types';
-import { ClientSideModel3DViewer } from '@/components/3d/ClientSideModel3DViewer';
+import { DirectModelViewer } from '@/components/3d/DirectModelViewer';
 import { SimpleCubeScene } from '@/components/3d/RotatingCube';
 import { storage } from '@/lib/storage';
 import { z } from 'zod';
@@ -463,7 +463,7 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
             <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
               <div className="text-sm space-y-2">
                 <div className="flex justify-between items-center">
-                  <span>Status:</span>
+                  <span>Model Status:</span>
                   <Badge variant={taskStatus?.status === 'SUCCEEDED' ? 'default' : 'secondary'}>
                     {taskStatus?.status || 'IDLE'}
                   </Badge>
@@ -506,7 +506,7 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
               size="lg"
             >
               <Play className="mr-2 h-4 w-4" />
-              {isGenerating ? 'Generating...' : 'Start Generate'}
+              {isGenerating ? 'Generating...' : 'Generate Model'}
             </Button>
 
           </div>
@@ -520,15 +520,17 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
           <h2 className="text-lg font-semibold text-white">3D Model Preview</h2>
           <div className="bg-gray-900 rounded-lg border border-gray-700 overflow-hidden" style={{ height: '549px' }}>
             {taskStatus && taskStatus.status === 'SUCCEEDED' ? (
-              <ClientSideModel3DViewer
+              <DirectModelViewer
                 taskResult={taskStatus}
                 className="w-full h-full rounded-lg"
-                autoDownload={false}
-                hideBottomInfo={true}
-                textureTaskId={textureTaskId}
+                textureModelUrl={textureTaskStatus?.status === 'SUCCEEDED' ? textureTaskStatus?.model_urls?.glb : undefined}
               />
             ) : (
-              <SimpleCubeScene />
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="bg-black/60 backdrop-blur-sm rounded-lg p-4 flex items-center">
+                  <span className="text-sm text-white">Waiting for model...</span>
+                </div>
+              </div>
             )}
           </div>
         </div>
