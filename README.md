@@ -1,81 +1,80 @@
 # GEN-3D-ASSETS
 
-> AI 驱动的 3D 资产 NFT 平台 - 将创意转化为链上数字资产
+> AI-Powered 3D Asset NFT Platform - Transform Ideas into On-Chain Digital Assets
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
-[![Solidity](https://img.shields.io/badge/Solidity-0.8.19-red.svg)](https://soliditylang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.20-red.svg)](https://soliditylang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.4-black.svg)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.1-61dafb.svg)](https://reactjs.org/)
+[![Foundry](https://img.shields.io/badge/Foundry-latest-brightgreen.svg)](https://getfoundry.sh/)
 
-## 🌟 项目概述
+## 🌟 Project Overview
 
-GEN-3D-ASSETS 是一个基于 AI 生成的 3D 资产 NFT 平台。用户可以通过输入文本提示词 (prompt) 或个人信息，使用 Meshy AI 生成个性化的 3D 模型，并将其作为 NFT 保存在区块链上。平台支持 3D 模型的展示、交易和下载功能。
+GEN-3D-ASSETS is an AI-powered 3D asset NFT platform that enables users to generate personalized 3D models using text prompts via Meshy AI and mint them as NFTs on the blockchain. The platform supports 3D model visualization, trading, and downloading with a comprehensive marketplace ecosystem.
 
-### 🎯 核心功能
+### 🎯 Key Features
 
-- **🤖 AI 生成**: 通过 Meshy AI API 将文本转换为高质量 3D 模型
-- **🖼️ 3D 展示**: 基于 React Three Fiber 的交互式 3D 查看器
-- **⛓️ NFT 铸造**: 智能合约管理的数字资产所有权
-- **💰 交易市场**: 内置的 NFT 交易和拍卖功能
-- **📦 文件下载**: 支持 OBJ、GLTF 等多种 3D 格式下载
-- **🎨 个性化**: 基于用户画像生成独特的数字资产
+- **🤖 AI Generation**: Text-to-3D conversion using advanced Meshy AI API
+- **🖼️ 3D Visualization**: Interactive 3D viewer powered by React Three Fiber
+- **⛓️ NFT Minting**: Smart contract-managed digital asset ownership
+- **💰 Marketplace**: Built-in NFT trading and auction system
+- **📦 Multi-Format Support**: Download as OBJ, GLTF, and other 3D formats
+- **🎨 Personalization**: Generate unique digital assets based on user preferences
+- **🔒 Secure Trading**: Automated royalty distribution and secure transactions
 
-## 🏗️ 技术架构
+## 🏗️ Technical Architecture
 
-### 核心技术栈
+### Technology Stack
 
-| 层级 | 技术选型 | 用途 |
-|------|----------|------|
-| **智能合约** | Foundry + Solidity + OpenZeppelin | NFT 管理、市场交易、版税分配 |
-| **前端框架** | Next.js 14 + TypeScript + App Router | 现代化 React 应用 |
-| **3D 渲染** | React Three Fiber + Three.js + Drei | 3D 模型展示和交互 |
-| **区块链集成** | Wagmi v2 + Viem + ConnectKit | 钱包连接和合约交互 |
-| **状态管理** | Zustand + TanStack Query | 应用状态和服务端数据 |
-| **样式系统** | TailwindCSS + shadcn/ui + Framer Motion | UI 组件和动画 |
-| **存储** | IPFS + Pinata | 去中心化文件存储 |
-| **部署** | Vercel + GitHub Actions | 自动化部署和 CI/CD |
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Smart Contracts** | Foundry + Solidity 0.8.20 + OpenZeppelin | NFT management, marketplace, royalty distribution |
+| **Frontend** | Next.js 15.4 + TypeScript + App Router | Modern React application with server-side rendering |
+| **3D Rendering** | React Three Fiber + Three.js + Drei | 3D model display and interaction |
+| **Blockchain** | Wagmi v2 + Viem + ConnectKit | Wallet connection and contract interactions |
+| **State Management** | Zustand + TanStack Query v5 | Application state and server data management |
+| **Styling** | TailwindCSS 4 + shadcn/ui + Radix UI | Component library and design system |
+| **Storage** | IPFS + Pinata | Decentralized file storage |
+| **Deployment** | Vercel + GitHub Actions | Automated deployment and CI/CD |
 
-### 系统架构图
+### System Architecture
 
 ```
-用户输入 Prompt → Meshy AI API → 3D 模型生成 → IPFS 存储 → 智能合约铸造 → 前端展示 → 交易/下载
+User Input → Meshy AI API → 3D Model Generation → IPFS Storage → Smart Contract Minting → Frontend Display → Trading/Download
 ```
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 环境要求
+### Prerequisites
 
-- Node.js 18+
-- pnpm 8+
-- Foundry 工具链
+- Node.js 18+ and pnpm 8+
+- Foundry toolchain
 - Git
 
-### 克隆项目
+### Installation
 
 ```bash
+# Clone the repository
 git clone https://github.com/your-username/GEN-3D-ASSETS.git
 cd GEN-3D-ASSETS
-```
 
-### 安装依赖
-
-```bash
-# 安装根目录依赖
+# Install dependencies
 pnpm install
 
-# 安装 Foundry (macOS/Linux)
+# Install Foundry (macOS/Linux)
 curl -L https://foundry.paradigm.xyz | bash
 foundryup
 ```
 
-### 环境配置
+### Environment Setup
 
 ```bash
-# 复制环境变量模板
+# Copy environment templates
 cp web/.env.example web/.env.local
 cp contracts/.env.example contracts/.env
 
-# 编辑环境变量
+# Configure environment variables
 # web/.env.local
 MESHY_API_KEY=your_meshy_api_key
 PINATA_API_KEY=your_pinata_api_key
@@ -86,157 +85,195 @@ PRIVATE_KEY=your_wallet_private_key
 RPC_URL=your_rpc_url
 ```
 
-### 本地开发
+### Development
 
 ```bash
-# 编译智能合约
-cd contracts
-forge build
+# Compile smart contracts
+pnpm run build:contracts
 
-# 启动前端开发服务器
-pnpm run dev --workspace=web
+# Start development server
+pnpm run dev
+
+# Run tests
+pnpm run test
+pnpm run test:contracts
 ```
 
-访问 `http://localhost:3000` 查看应用。
+Visit `http://localhost:3000` to view the application.
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 GEN-3D-ASSETS/
-├── contracts/          # Foundry 智能合约项目
+├── contracts/                    # Foundry smart contract project
 │   ├── src/
-│   │   ├── Asset3D.sol              # 主 NFT 合约
-│   │   ├── Asset3DMarketplace.sol   # 市场合约
-│   │   └── Asset3DRoyalty.sol       # 版税分配合约
-│   ├── test/              # 合约测试
-│   └── script/            # 部署脚本
-├── web/                # Next.js 前端项目
+│   │   ├── Asset3DNFT.sol       # Main NFT contract with ERC-721 + extensions
+│   │   ├── interfaces/          # Contract interfaces
+│   │   └── libraries/           # Shared libraries
+│   ├── test/                    # Contract tests
+│   ├── script/                  # Deployment scripts
+│   └── foundry.toml            # Foundry configuration
+├── web/                         # Next.js frontend application
 │   ├── src/
-│   │   ├── app/           # App Router 页面
-│   │   ├── components/    # React 组件
-│   │   ├── lib/           # 工具库和配置
-│   │   └── types/         # TypeScript 类型
-│   └── public/            # 静态资源
-├── docs/               # 项目文档
-├── .github/            # GitHub Actions CI/CD
-└── README.md           # 项目说明
+│   │   ├── app/                # App Router pages
+│   │   │   ├── generate/       # 3D asset generation
+│   │   │   ├── marketplace/    # NFT marketplace
+│   │   │   ├── nft/           # NFT management
+│   │   │   └── profile/       # User profile
+│   │   ├── components/
+│   │   │   ├── 3d/            # 3D visualization components
+│   │   │   ├── ui/            # Reusable UI components
+│   │   │   ├── web3/          # Blockchain integration
+│   │   │   └── layout/        # Layout components
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── lib/               # Utilities and configurations
+│   │   └── store/             # State management
+│   └── package.json
+├── docs/                        # Project documentation
+├── .github/                     # GitHub Actions workflows
+├── pnpm-workspace.yaml         # PNPM workspace configuration
+└── README.md
 ```
 
-## 🎮 使用指南
+## 🎮 Usage Guide
 
-### 1. 连接钱包
-在首页点击"连接钱包"按钮，支持 MetaMask、WalletConnect 等主流钱包。
+### 1. Connect Wallet
+Click "Connect Wallet" on the homepage. Supports MetaMask, WalletConnect, and other popular wallets via ConnectKit.
 
-### 2. 生成 3D 资产
-- 进入"创建"页面
-- 输入描述性的 prompt（如："一只蓝色的卡通龙"）
-- 等待 AI 生成 3D 模型
-- 预览并确认模型效果
+### 2. Generate 3D Assets
+- Navigate to the "Generate" page
+- Enter descriptive prompts (e.g., "A futuristic blue dragon")
+- Wait for AI to generate the 3D model
+- Preview and confirm the model quality
 
-### 3. 铸造 NFT
-- 选择满意的 3D 模型
-- 设置资产信息（名称、描述、版税比例）
-- 支付 Gas 费用完成链上铸造
-- 获得唯一的 NFT 所有权
+### 3. Mint NFT
+- Select your preferred 3D model
+- Set asset information (name, description, royalty percentage)
+- Pay gas fees to complete on-chain minting
+- Receive unique NFT ownership
 
-### 4. 展示和交易
-- 在"画廊"中浏览所有 3D 资产
-- 查看详细的 3D 模型信息
-- 在"市场"中买卖 NFT
-- 下载拥有的 3D 模型文件
+### 4. View and Trade
+- Browse all 3D assets in the "Gallery"
+- View detailed 3D model information
+- Trade NFTs in the "Marketplace"
+- Download owned 3D model files
 
-## 🔧 开发命令
+## 🔧 Development Scripts
 
 ```bash
-# 开发
-pnpm run dev                    # 启动前端开发服务器
-pnpm run dev:contracts         # 启动本地区块链节点
+# Development
+pnpm run dev                     # Start frontend development server
+pnpm run dev --filter web       # Start web app only
 
-# 构建
-pnpm run build                 # 构建前端应用
-pnpm run build:contracts      # 编译智能合约
+# Building
+pnpm run build                   # Build all projects
+pnpm run build:contracts        # Compile smart contracts
 
-# 测试
-pnpm run test                  # 运行所有测试
-pnpm run test:contracts       # 运行合约测试
-pnpm run test:web             # 运行前端测试
+# Testing
+pnpm run test                    # Run all tests
+pnpm run test:contracts         # Run contract tests
 
-# 代码质量
-pnpm run lint                  # 代码检查
-pnpm run format               # 代码格式化
+# Code Quality
+pnpm run lint                    # ESLint checking
+pnpm run format                  # Code formatting
+pnpm run lint:staged           # Pre-commit checks
 
-# 部署
-pnpm run deploy:testnet       # 部署到测试网
-pnpm run deploy:mainnet       # 部署到主网
+# Deployment
+forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 ```
 
-## 📜 智能合约
+## 📜 Smart Contracts
 
-### 主要合约功能
+### Asset3DNFT.sol Features
 
-#### Asset3D.sol (ERC-721)
-- ✅ NFT 铸造和管理
-- ✅ 元数据存储 (IPFS)
-- ✅ 版税机制 (EIP-2981)
-- ✅ 访问控制
+#### Core NFT Functionality (ERC-721)
+- ✅ NFT minting and management
+- ✅ Metadata storage with IPFS integration
+- ✅ Royalty mechanism (EIP-2981)
+- ✅ Access control with role-based permissions
+- ✅ Batch minting support
 
-#### Asset3DMarketplace.sol
-- ✅ 资产上架和交易
-- ✅ 拍卖功能
-- ✅ 版税自动分配
+#### Advanced Features
+- ✅ Asset upgrade system (preview → refine mode)
+- ✅ Texture URL management
+- ✅ Creator asset tracking
+- ✅ Meshy task ID integration
+- ✅ Pausable contract for emergency control
 
-#### Asset3DRoyalty.sol
-- ✅ 多方收益分成
-- ✅ 自动版税分配
-- ✅ 收益提取
+#### Security Features
+- ✅ ReentrancyGuard protection
+- ✅ Role-based access control
+- ✅ Input validation and metadata verification
+- ✅ Emergency pause functionality
 
-## 🔐 安全考虑
+## 🔐 Security Considerations
 
-- ✅ API 密钥服务端保护
-- ✅ 输入验证和文件验证  
-- ✅ 重入攻击防护
-- ✅ 访问控制和权限管理
-- ✅ 速率限制和用量控制
+- ✅ API key server-side protection
+- ✅ Input validation and file verification
+- ✅ Reentrancy attack prevention
+- ✅ Access control and permission management
+- ✅ Rate limiting and usage controls
+- ✅ Secure IPFS integration with Pinata
 
-## 📊 性能优化
+## 📊 Performance Optimizations
 
-- ✅ 3D 模型 LOD (Level of Detail)
-- ✅ 懒加载和预加载策略
-- ✅ IPFS CDN 加速
-- ✅ Next.js 图像优化
-- ✅ 智能缓存策略
+- ✅ 3D model Level of Detail (LOD)
+- ✅ Lazy loading and preload strategies
+- ✅ IPFS CDN acceleration with Pinata
+- ✅ Next.js image and asset optimization
+- ✅ Smart caching strategies with TanStack Query
+- ✅ Progressive Web App (PWA) support
 
-## 🛣️ 路线图
+## 🛣️ Roadmap
 
-### v1.0 - MVP
-- [x] 技术选型和架构设计
-- [ ] 基础 3D 生成和展示
-- [ ] NFT 铸造功能
-- [ ] 简单的市场交易
+### v1.0 - MVP ✅
+- [x] Technology selection and architecture design
+- [x] Smart contract development (Asset3DNFT)
+- [x] Basic 3D generation and display
+- [x] NFT minting functionality
+- [x] Simple marketplace interface
 
-### v1.1 - 增强功能
-- [ ] 批量生成和铸造
-- [ ] 高级搜索和筛选
-- [ ] 移动端优化
-- [ ] 多语言支持
+### v1.1 - Enhanced Features 🚧
+- [ ] Batch generation and minting
+- [ ] Advanced search and filtering
+- [ ] Mobile optimization
+- [ ] Multi-language support
 
-### v2.0 - 平台化
-- [ ] API 开放平台
-- [ ] 插件系统
-- [ ] Layer 2 集成
-- [ ] 跨链支持
+### v2.0 - Platform Expansion 📋
+- [ ] Public API platform
+- [ ] Plugin ecosystem
+- [ ] Layer 2 integration
+- [ ] Cross-chain support
 
-## 📄 许可证
+## 🤝 Contributing
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](./LICENSE) 文件了解详细信息。
+We welcome contributions! Please see our [Contributing Guidelines](./CONTRIBUTING.md) for details.
 
-## 🔗 相关链接
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-- [详细实施计划](./IMPLEMENTATION_PLAN.md)
-- [项目想法记录](./todos.md)
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## 🔗 Related Links
+
+- [Implementation Plan](./IMPLEMENTATION_PLAN.md)
+- [API Documentation](./API_SPECIFICATION.md)
+- [Deployment Guide](./DEPLOYMENT_GUIDE.md)
+- [Frontend Architecture](./FRONTEND_ARCHITECTURE.md)
+
+## 📞 Support
+
+- 📧 Email: support@gen3dassets.com
+- 💬 Discord: [Join our community](https://discord.gg/gen3dassets)
+- 🐛 Issues: [GitHub Issues](https://github.com/your-username/GEN-3D-ASSETS/issues)
 
 ---
 
-⭐ 如果这个项目对您有帮助，请给我们一个 Star！
+⭐ If this project helps you, please give us a Star!
 
-Made with ❤️ by the GEN-3D-ASSETS team
+**Made with ❤️ by the GEN-3D-ASSETS team**
