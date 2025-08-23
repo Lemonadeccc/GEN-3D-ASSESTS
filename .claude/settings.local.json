@@ -1,12 +1,14 @@
 {
-  "env": {
-    "ANTHROPIC_AUTH_TOKEN": "sk-hpxOeHScGnrvGmLFHULSpiBmKmKItQV1",
-    "ANTHROPIC_BASE_URL": "https://api.packycode.com",
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1
-  },
   "permissions": {
-    "allow": [],
+    "allow": [
+      "Bash(echo:*)",
+      "Bash(cat:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(rm:*)"
+    ],
     "deny": []
-  },
-  "apiKeyHelper": "echo 'sk-hpxOeHScGnrvGmLFHULSpiBmKmKItQV1'"
+  }
 }
