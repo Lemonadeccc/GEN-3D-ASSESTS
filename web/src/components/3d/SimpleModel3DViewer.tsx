@@ -27,6 +27,7 @@ import { TaskStatusResponse } from '@/lib/meshy/types';
 import { useModelDownload } from '@/hooks/use-model-download';
 import { useTextToTexture, useTextureTaskStatus } from '@/hooks/use-meshy';
 import { storage } from '@/lib/storage';
+import { toast } from 'sonner';
 
 // 使用memo包装3D模型组件避免重渲染
 const SimpleGLBModel = memo(function SimpleGLBModel({ url, onLoad, onError }: { url: string; onLoad: () => void; onError: (error: any) => void }) {
@@ -81,14 +82,14 @@ const TextureDialog = memo(function TextureDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]" onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
-          <DialogTitle>重新生成纹理</DialogTitle>
+          <DialogTitle>Regenerate Texture</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="texture-prompt">纹理描述</Label>
+            <Label htmlFor="texture-prompt">Texture Description</Label>
             <Textarea
               id="texture-prompt"
-              placeholder="例如: 金属质感、木纹理、彩虹色彩..."
+              placeholder="e.g., metallic surface, wood grain, rainbow colors..."
               value={texturePrompt}
               onChange={onTexturePromptChange}
               maxLength={600}
@@ -99,15 +100,15 @@ const TextureDialog = memo(function TextureDialog({
               spellCheck={false}
             />
             <div className="text-xs text-muted-foreground text-right">
-              {texturePrompt.length}/600 字符
+              {texturePrompt.length}/600 chars
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="style-prompt">样式提示 (可选)</Label>
+            <Label htmlFor="style-prompt">Style Prompt (optional)</Label>
             <Input
               id="style-prompt"
-              placeholder="例如: 红色獠牙、武士装束..."
+              placeholder="e.g., red fangs, samurai armor..."
               value={negativePrompt}
               onChange={onNegativePromptChange}
               autoComplete="off"
@@ -126,7 +127,7 @@ const TextureDialog = memo(function TextureDialog({
               className="rounded"
             />
             <Label htmlFor="enable-pbr" className="text-sm">
-              生成PBR材质贴图 (高质量)
+              Generate PBR material maps (high quality)
             </Label>
           </div>
         </div>
@@ -137,7 +138,7 @@ const TextureDialog = memo(function TextureDialog({
             variant="outline" 
             onClick={() => onOpenChange(false)}
           >
-            取消
+            Cancel
           </Button>
           <Button 
             type="button"
@@ -147,10 +148,10 @@ const TextureDialog = memo(function TextureDialog({
             {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                启动中...
+                Starting...
               </>
             ) : (
-              '开始生成'
+              'Start Generate'
             )}
           </Button>
         </div>
@@ -191,9 +192,23 @@ const Model3DCanvas = memo(function Model3DCanvas({
     <Canvas
       camera={{ position: [0, 0, 5], fov: 45 }}
       className="rounded-lg"
+      dpr={[1, 1.5]}
+      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
       onCreated={({ gl }) => {
-        gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         console.log('Simple Canvas created successfully');
+        const canvas = gl.domElement as HTMLCanvasElement;
+        const onLost = (e: Event) => {
+          e.preventDefault();
+          console.warn('WebGL context lost');
+          toast.warning('3D preview paused (insufficient GPU resources)');
+        };
+        const onRestored = () => {
+          console.info('WebGL context restored');
+          toast.success('3D preview resumed');
+        };
+        canvas.addEventListener('webglcontextlost', onLost as EventListener, false);
+        canvas.addEventListener('webglcontextrestored', onRestored as EventListener, false);
       }}
       onError={(error) => {
         console.error('Simple Canvas error:', error);
@@ -466,12 +481,12 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
       } else {
         console.error('Download failed: no blob URL returned');
         setLoadStatus('error');
-        setErrorMessage('下载失败');
+        setErrorMessage('Download failed');
       }
     } catch (error: any) {
       console.error('Download error:', error);
       setLoadStatus('error');
-      setErrorMessage(error.message || '下载失败');
+      setErrorMessage(error.message || 'Download failed');
     }
   };
 
@@ -481,7 +496,7 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
 
   const handleModelError = useCallback((error: any) => {
     setLoadStatus('error');
-    const errorMsg = error?.message || '模型加载失败';
+    const errorMsg = error?.message || 'Model loading failed';
     setErrorMessage(errorMsg);
     console.error('Model loading error details:', {
       error,
@@ -570,7 +585,7 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             <div className="flex items-center space-x-2 text-red-800">
               <AlertTriangle className="h-4 w-4" />
-              <span className="text-sm font-medium">加载失败</span>
+              <span className="text-sm font-medium">Load failed</span>
             </div>
             <p className="text-red-700 text-xs mt-1">{errorMessage}</p>
           </div>
@@ -606,7 +621,7 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
             size="sm"
             onClick={handleFullscreen}
             className="h-8 w-8 p-0"
-            title={isFullscreen ? "退出全屏" : "全屏查看"}
+            title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
           >
             <Maximize className="h-4 w-4" />
           </Button>
@@ -615,7 +630,7 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0"
-            title="重新生成纹理"
+            title="Regenerate texture"
             onClick={() => setShowRetextureDialog(true)}
           >
             <Palette className="h-4 w-4" />
@@ -627,51 +642,51 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
             onClick={async () => {
               console.log('🔽 智能下载开始');
               
-              // 如果有纹理任务且成功，下载纹理版本
+              // If texture task succeeded, download textured version
               if (memoizedTextureStatus?.status === 'SUCCEEDED' && memoizedTextureStatus.model_urls?.glb) {
-                console.log('📦 下载带纹理的GLB模型:', memoizedTextureStatus.model_urls.glb);
+                console.log('📦 Download textured GLB model:', memoizedTextureStatus.model_urls.glb);
                 window.open(memoizedTextureStatus.model_urls.glb, '_blank');
                 
-                // 同时下载纹理贴图
+                // Also download texture maps
                 if (memoizedTextureStatus.texture_urls?.[0]) {
                   const textures = memoizedTextureStatus.texture_urls[0];
                   setTimeout(() => {
                     if (textures.base_color) {
-                      console.log('🖼️ 下载基础色贴图');
+                      console.log('🖼️ Download base color map');
                       window.open(textures.base_color, '_blank');
                     }
                   }, 1000);
                   
                   setTimeout(() => {
                     if (textures.normal) {
-                      console.log('🖼️ 下载法线贴图');
+                      console.log('🖼️ Download normal map');
                       window.open(textures.normal, '_blank');
                     }
                   }, 2000);
                   
                   setTimeout(() => {
                     if (textures.roughness) {
-                      console.log('🖼️ 下载粗糙度贴图');
+                      console.log('🖼️ Download roughness map');
                       window.open(textures.roughness, '_blank');
                     }
                   }, 3000);
                   
                   setTimeout(() => {
                     if (textures.metallic) {
-                      console.log('🖼️ 下载金属度贴图');
+                      console.log('🖼️ Download metallic map');
                       window.open(textures.metallic, '_blank');
                     }
                   }, 4000);
                 }
               } 
-              // 否则下载原始模型
+              // Otherwise download original model
               else if (taskResult.model_urls?.glb) {
-                console.log('📦 下载原始GLB模型（白模）:', taskResult.model_urls.glb);
+                console.log('📦 Download original GLB model:', taskResult.model_urls.glb);
                 window.open(taskResult.model_urls.glb, '_blank');
               }
             }}
             className="h-8 w-8 p-0"
-            title={memoizedTextureStatus?.status === 'SUCCEEDED' ? "下载模型和纹理" : "下载模型"}
+            title={memoizedTextureStatus?.status === 'SUCCEEDED' ? "Download model and textures" : "Download model"}
             disabled={!taskResult.model_urls?.glb}
           >
             <Download className="h-4 w-4" />
@@ -687,16 +702,16 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
               <div>
                 <Badge variant="secondary" className="mb-2">
                   <Eye className="h-3 w-3 mr-1" />
-                  3D 预览 (GLB)
+                  3D Preview (GLB)
                 </Badge>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <div>任务ID: {taskResult.id}</div>
-                  <div>状态: {loadStatus === 'success' ? '加载完成' : loadStatus === 'loading' ? '加载中' : loadStatus === 'downloading' ? '下载中' : '准备中'}</div>
+                  <div>Task ID: {taskResult.id}</div>
+                  <div>Status: {loadStatus === 'success' ? 'Loaded' : loadStatus === 'loading' ? 'Loading' : loadStatus === 'downloading' ? 'Downloading' : 'Idle'}</div>
                   {memoizedTextureStatus && (
                     <div className="mt-2 p-2 bg-blue-50 rounded border">
                       <div className="flex items-center space-x-2 text-blue-800">
                         <Palette className="h-3 w-3" />
-                        <span className="text-xs font-medium">纹理生成: {memoizedTextureStatus.status}</span>
+                        <span className="text-xs font-medium">Texture Generation: {memoizedTextureStatus.status}</span>
                       </div>
                       {memoizedTextureStatus.status === 'IN_PROGRESS' && (
                         <div className="mt-1">
@@ -706,7 +721,7 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
                       )}
                       {memoizedTextureStatus && memoizedTextureStatus.status === 'SUCCEEDED' && (
                         <div className="text-xs text-green-700 mt-1 flex items-center justify-between">
-                          <span>✅ 纹理生成完成</span>
+                          <span>✅ Texture generation completed</span>
                           <button
                             className="text-blue-600 hover:text-blue-700 text-xs underline cursor-pointer"
                             onClick={(e) => {
@@ -734,12 +749,12 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
                               }
                             }}
                           >
-                            重新生成
+                            Regenerate
                           </button>
                         </div>
                       )}
                       {memoizedTextureStatus && memoizedTextureStatus.status === 'FAILED' && (
-                        <div className="text-xs text-red-700 mt-1">❌ 纹理生成失败</div>
+                        <div className="text-xs text-red-700 mt-1">❌ Texture generation failed</div>
                       )}
                     </div>
                   )}
@@ -751,7 +766,7 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
                 onClick={() => currentModelUrl && window.open(currentModelUrl, '_blank')}
               >
                 <Download className="h-4 w-4 mr-2" />
-                下载
+                Download
               </Button>
             </div>
           </div>
@@ -776,7 +791,7 @@ export function SimpleModel3DViewer({ taskResult, className, hideBottomInfo = fa
       <CardHeader>
         <CardTitle className="flex items-center space-x-2">
           <Box className="h-5 w-5" />
-          <span>3D 模型预览 (简化版)</span>
+          <span>3D Model Preview (Lite)</span>
           <Badge variant="outline">GLB</Badge>
         </CardTitle>
       </CardHeader>

@@ -185,6 +185,8 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
     }
   }, [currentTaskId]);
 
+  
+
   // Handle texture task status updates
   useEffect(() => {
     if (textureTaskStatus) {
@@ -516,7 +518,7 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
         {/* 3D Model Preview - 减少高度，为下方元素留出空间 */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-white">3D Model Preview</h2>
-          <div className="bg-gray-900 rounded-lg border border-gray-700 overflow-hidden" style={{ height: 'calc(100vh - 417px)' }}>
+          <div className="bg-gray-900 rounded-lg border border-gray-700 overflow-hidden" style={{ height: '549px' }}>
             {taskStatus && taskStatus.status === 'SUCCEEDED' ? (
               <ClientSideModel3DViewer
                 taskResult={taskStatus}
@@ -593,7 +595,7 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
         <div className="p-6 pt-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 mb-4" style={{ height: '549px' }}>
 
           {generatedTasks.length === 0 ? (
-            <div className="text-center text-gray-400 mt-12">
+            <div className="h-full flex flex-col items-center justify-center text-center text-gray-400">
               <div className="w-16 h-16 border-2 border-dashed border-gray-600 rounded-lg mx-auto mb-4 flex items-center justify-center">
                 <Sparkles className="h-6 w-6" />
               </div>
@@ -801,15 +803,15 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Palette className="h-5 w-5" />
-              生成纹理
+              Generate Texture
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="texture-prompt">纹理描述</Label>
+              <Label htmlFor="texture-prompt">Texture Description</Label>
               <Textarea
                 id="texture-prompt"
-                placeholder="例如: 金属质感、木纹理、彩虹色彩..."
+                placeholder="e.g., metallic surface, wood grain, rainbow colors..."
                 value={texturePrompt}
                 onChange={(e) => setTexturePrompt(e.target.value)}
                 maxLength={600}
@@ -820,15 +822,15 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
                 spellCheck={false}
               />
               <div className="text-xs text-muted-foreground text-right">
-                {texturePrompt.length}/600 字符
+                {texturePrompt.length}/600 chars
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="style-prompt">样式提示 (可选)</Label>
+              <Label htmlFor="style-prompt">Style Prompt (optional)</Label>
               <Input
                 id="style-prompt"
-                placeholder="例如: 红色獠牙、武士装束..."
+                placeholder="e.g., red fangs, samurai armor..."
                 value={negativePrompt}
                 onChange={(e) => setNegativePrompt(e.target.value)}
                 autoComplete="off"
@@ -847,7 +849,7 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
                 className="rounded"
               />
               <Label htmlFor="enable-pbr" className="text-sm">
-                生成PBR材质贴图 (高质量)
+                Generate PBR material maps (high quality)
               </Label>
             </div>
 
@@ -856,7 +858,7 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
               <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
                 <div className="text-sm space-y-2">
                   <div className="flex justify-between items-center">
-                    <span>状态:</span>
+                    <span>Status:</span>
                     <Badge variant={textureTaskStatus.status === 'SUCCEEDED' ? 'default' : 'secondary'}>
                       {textureTaskStatus.status}
                     </Badge>
@@ -864,7 +866,7 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
                   {textureTaskStatus.status === 'IN_PROGRESS' && (
                     <div>
                       <div className="flex justify-between text-xs mb-1">
-                        <span>进度</span>
+                        <span>Progress</span>
                         <span>{textureTaskStatus.progress || 0}%</span>
                       </div>
                       <div className="w-full bg-gray-600 rounded-full h-1.5">
@@ -886,7 +888,7 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
               variant="outline"
               onClick={() => setShowTextureDialog(false)}
             >
-              取消
+              Cancel
             </Button>
             <Button
               type="button"
@@ -896,10 +898,10 @@ export function TGeneratePage({ onTaskCreated }: TGeneratePageProps) {
               {textToTextureMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  启动中...
+                  Starting...
                 </>
               ) : (
-                '开始生成'
+                'Start Generate'
               )}
             </Button>
           </div>

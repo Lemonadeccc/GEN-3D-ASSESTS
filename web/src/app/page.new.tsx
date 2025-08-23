@@ -25,34 +25,34 @@ import {
 const features = [
   {
     icon: Sparkles,
-    title: 'AI 生成 3D 模型',
-    description: '使用先进的 Meshy AI 技术，从文本或图片生成高质量 3D 模型',
+    title: 'AI-generated 3D Models',
+    description: 'Use advanced Meshy AI to generate high-quality 3D models from text or images',
     href: '/generate'
   },
   {
     icon: Palette,
-    title: '智能纹理编辑',
-    description: '支持重新纹理、PBR 材质生成和网格优化',
+    title: 'Intelligent Texture Editing',
+    description: 'Supports retexturing, PBR material generation, and mesh optimization',
     href: '/generate'
   },
   {
     icon: Box,
-    title: '3D 模型预览',
-    description: '实时预览、旋转查看模型，支持多种格式导出',
+    title: '3D Model Preview',
+    description: 'Preview in real-time, rotate the model, and export in multiple formats',
     href: '/generate'
   },
   {
     icon: Coins,
-    title: 'NFT 铸造',
-    description: '将 3D 模型铸造为 NFT，确保数字资产的唯一性和所有权',
+    title: 'NFT Minting',
+    description: 'Mint 3D models as NFTs to ensure uniqueness and ownership',
     href: '/nft'
   },
 ];
 
 const stats = [
-  { label: '生成模型', value: '10K+' },
-  { label: '活跃用户', value: '1K+' },
-  { label: 'NFT 交易', value: '500+' },
+  { label: 'Models Generated', value: '10K+' },
+  { label: 'Active Users', value: '1K+' },
+  { label: 'NFT Trades', value: '500+' },
 ];
 
 // 原版主页内容组件
@@ -69,12 +69,12 @@ function OriginalHomePage() {
               🚀 AI-Powered 3D NFT Platform
             </Badge>
             <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 bg-clip-text text-transparent">
-              将创意转化为
+              Turn your ideas into
               <br />
-              3D NFT 资产
+              3D NFT Assets
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              使用 AI 技术从文本或图片生成独特的 3D 模型，支持高级编辑和动画，最终铸造为 NFT
+              Generate unique 3D models from text or images using AI, with advanced editing and animation, then mint as NFTs
             </p>
           </div>
 
@@ -82,14 +82,14 @@ function OriginalHomePage() {
             <Button size="lg" asChild>
               <Link href="/generate">
                 <Sparkles className="mr-2 h-5 w-5" />
-                开始生成
+                Start Generating
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
               <Link href="/nft">
                 <Coins className="mr-2 h-5 w-5" />
-                我的NFT
+                My NFTs
               </Link>
             </Button>
           </div>
@@ -108,9 +108,9 @@ function OriginalHomePage() {
         {/* Features */}
         <section className="py-16">
           <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl font-bold">强大的功能特性</h2>
+            <h2 className="text-3xl font-bold">Powerful Features</h2>
             <p className="text-muted-foreground">
-              从 AI 生成到 NFT 铸造，一站式 3D 资产创作平台
+              One-stop 3D asset creation from AI generation to NFT minting
             </p>
           </div>
 
@@ -141,18 +141,18 @@ function OriginalHomePage() {
         {/* How it works */}
         <section className="py-16 bg-muted/50 rounded-2xl">
           <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl font-bold">工作流程</h2>
+            <h2 className="text-3xl font-bold">Workflow</h2>
             <p className="text-muted-foreground">
-              简单四步，从创意到 NFT
+              Four simple steps from idea to NFT
             </p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8">
             {[
-              { step: '01', title: 'AI 生成', desc: '输入文本或上传图片' },
-              { step: '02', title: '预览编辑', desc: '预览模型并进行编辑优化' },
-              { step: '03', title: '纹理优化', desc: '可选的纹理重新生成' },
-              { step: '04', title: 'NFT 铸造', desc: '铸造为独一无二的 NFT' },
+              { step: '01', title: 'AI Generation', desc: 'Enter text or upload images' },
+              { step: '02', title: 'Preview & Edit', desc: 'Preview and refine your model' },
+              { step: '03', title: 'Texture', desc: 'Optional texture regeneration' },
+              { step: '04', title: 'Mint NFT', desc: 'Mint as a unique NFT' },
             ].map((item, index) => (
               <div key={item.step} className="text-center">
                 <div className="mx-auto w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold mb-4">
@@ -171,21 +171,21 @@ function OriginalHomePage() {
         {/* CTA */}
         <section className="text-center py-16">
           <div className="space-y-4">
-            <h2 className="text-3xl font-bold">准备开始创作了吗？</h2>
+            <h2 className="text-3xl font-bold">Ready to start creating?</h2>
             <p className="text-muted-foreground">
-              加入我们的创作者社区，开始您的 3D NFT 之旅
+              Join our creator community and start your 3D NFT journey
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Button size="lg" asChild>
                 <Link href="/generate">
                   <Zap className="mr-2 h-5 w-5" />
-                  立即开始生成
+                  Start Generating Now
                 </Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
                 <Link href="/test">
                   <TrendingUp className="mr-2 h-5 w-5" />
-                  查看技术演示
+                  View Tech Demo
                 </Link>
               </Button>
             </div>
@@ -226,7 +226,7 @@ export default function HomePage() {
   // 否则返回原版布局，但添加切换按钮
   return (
     <div className="relative">
-      {/* 布局切换按钮 - 固定在右上角 */}
+          {/* Layout toggle - fixed at top right */}
       <div className="fixed top-4 right-4 z-50">
         <Button
           variant="outline"
@@ -235,7 +235,7 @@ export default function HomePage() {
           className="flex items-center gap-2 bg-background/80 backdrop-blur-sm"
         >
           <Box className="h-4 w-4" />
-          T设计
+          T Layout
         </Button>
       </div>
       

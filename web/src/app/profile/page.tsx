@@ -14,23 +14,23 @@ export default function ProfilePage() {
         <div className="text-center space-y-4">
           <Badge variant="secondary" className="text-sm">
             <User className="mr-2 h-4 w-4" />
-            用户中心
+            User Center
           </Badge>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-            个人资料
+            Profile
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            管理您的 3D NFT 资产和个人设置
+            Manage your 3D NFT assets and settings
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>用户中心功能开发中</CardTitle>
+            <CardTitle>User Center under development</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              用户中心功能正在开发中，敬请期待...
+              The user center is under development. Stay tuned...
             </p>
           </CardContent>
         </Card>

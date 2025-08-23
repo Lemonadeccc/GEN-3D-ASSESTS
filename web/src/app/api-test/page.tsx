@@ -11,7 +11,7 @@ import { SimpleModel3DViewer } from '@/components/3d/SimpleModel3DViewer';
 import { Sparkles, Loader2, Eye } from 'lucide-react';
 
 export default function APITestPage() {
-  const [prompt, setPrompt] = useState('请生成一个黑曜石nft要求低调深沉');
+  const [prompt, setPrompt] = useState('Please generate an obsidian NFT with a low-key, deep vibe');
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   
   const textTo3DMutation = useTextTo3D();
@@ -41,23 +41,23 @@ export default function APITestPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Meshy API 3D模型格式测试</h1>
+        <h1 className="text-3xl font-bold mb-2">Meshy API 3D Model Format Test</h1>
         <p className="text-muted-foreground mb-6">
-          测试真实API返回的不同3D模型格式在React Three Fiber中的兼容性
+          Test the compatibility of different 3D model formats in React Three Fiber
         </p>
 
-        {/* 生成控制 */}
+        {/* Generation Controls */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Sparkles className="h-5 w-5" />
-              <span>生成测试模型</span>
+              <span>Generate Test Model</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex space-x-2">
               <Input
-                placeholder="输入提示词..."
+                placeholder="Enter prompt..."
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 className="flex-1"
@@ -69,12 +69,12 @@ export default function APITestPage() {
                 {textTo3DMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    生成中
+                    Generating
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    开始生成
+                    Start Generate
                   </>
                 )}
               </Button>
@@ -82,11 +82,11 @@ export default function APITestPage() {
           </CardContent>
         </Card>
 
-        {/* 任务状态 */}
+        {/* Task Status */}
         {currentTaskId && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>任务状态</CardTitle>
+              <CardTitle>Task Status</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -98,20 +98,20 @@ export default function APITestPage() {
                 {taskStatus && (
                   <>
                     <div className="flex justify-between">
-                      <span>状态:</span>
+                      <span>Status:</span>
                       <Badge variant={taskStatus.status === 'SUCCEEDED' ? 'default' : 'secondary'}>
                         {taskStatus.status}
                       </Badge>
                     </div>
                     
                     <div className="flex justify-between">
-                      <span>进度:</span>
+                      <span>Progress:</span>
                       <span>{taskStatus.progress}%</span>
                     </div>
 
                     {taskStatus.status === 'SUCCEEDED' && taskStatus.model_urls && (
                       <div className="mt-4 p-4 border rounded-lg">
-                        <h4 className="font-medium mb-2">✅ API返回的模型URLs:</h4>
+                        <h4 className="font-medium mb-2">✅ Model URLs from API:</h4>
                         <div className="space-y-2 text-sm">
                           {Object.entries(taskStatus.model_urls).map(([format, url]) => (
                             url && (
@@ -140,19 +140,19 @@ export default function APITestPage() {
           </Card>
         )}
 
-        {/* 3D模型格式测试 */}
+        {/* 3D Model Format Tests */}
         {currentTaskId && taskStatus && taskStatus.status === 'SUCCEEDED' && taskStatus.model_urls && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold">3D模型格式兼容性测试</h2>
+            <h2 className="text-2xl font-bold">3D Model Format Compatibility</h2>
             
-            {/* GLB 格式测试 */}
+            {/* GLB format */}
             {taskStatus.model_urls.glb && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Eye className="h-5 w-5" />
-                    <span>GLB 格式测试</span>
-                    <Badge>推荐格式</Badge>
+                    <span>GLB Format</span>
+                    <Badge>Recommended</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -169,14 +169,14 @@ export default function APITestPage() {
               </Card>
             )}
 
-            {/* FBX 格式测试 */}
+            {/* FBX format */}
             {taskStatus.model_urls.fbx && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Eye className="h-5 w-5" />
-                    <span>FBX 格式测试</span>
-                    <Badge variant="outline">实验性</Badge>
+                    <span>FBX Format</span>
+                    <Badge variant="outline">Experimental</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -193,14 +193,14 @@ export default function APITestPage() {
               </Card>
             )}
 
-            {/* OBJ 格式测试 */}
+            {/* OBJ format */}
             {taskStatus.model_urls.obj && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Eye className="h-5 w-5" />
-                    <span>OBJ 格式测试</span>
-                    <Badge variant="outline">基础格式</Badge>
+                    <span>OBJ Format</span>
+                    <Badge variant="outline">Basic</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -217,15 +217,15 @@ export default function APITestPage() {
               </Card>
             )}
 
-            {/* 缩略图和视频 */}
+        {/* Thumbnail and Video */}
             <Card>
               <CardHeader>
-                <CardTitle>其他资源</CardTitle>
+                <CardTitle>Other Assets</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {taskStatus.thumbnail_url && (
                   <div>
-                    <p className="text-sm font-medium mb-2">缩略图:</p>
+                    <p className="text-sm font-medium mb-2">Thumbnail:</p>
                     <img 
                       src={taskStatus.thumbnail_url} 
                       alt="Model thumbnail" 
@@ -236,7 +236,7 @@ export default function APITestPage() {
                 
                 {taskStatus.video_url && (
                   <div>
-                    <p className="text-sm font-medium mb-2">预览视频:</p>
+                    <p className="text-sm font-medium mb-2">Preview Video:</p>
                     <video 
                       src={taskStatus.video_url} 
                       controls 

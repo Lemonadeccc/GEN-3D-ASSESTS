@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Store, User, Home, Palette, Coins } from 'lucide-react';
+import { Sparkles, User, Home, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 
@@ -16,11 +16,11 @@ export function Navbar() {
 
   // 缓存导航配置以避免重新渲染
   const navigation = useMemo(() => [
-    { name: '首页', href: '/', icon: Home },
-    { name: '生成', href: '/generate', icon: Sparkles },
-    { name: 'NFT', href: '/nft', icon: Coins },
-    { name: '市场', href: '/marketplace', icon: Store },
-    { name: '我的', href: '/profile', icon: User },
+    { name: 'Home', href: '/', icon: Home },
+    { name: 'Generate', href: '/generate', icon: Sparkles },
+    // { name: 'NFT', href: '/nft', icon: Coins }, // 暂时隐藏入口
+    // { name: '市场', href: '/marketplace', icon: Store }, // 暂时隐藏入口
+    { name: 'Profile', href: '/profile', icon: User },
   ], []);
 
   return (
@@ -72,12 +72,12 @@ export function Navbar() {
             <div className="hidden md:flex items-center space-x-2">
               <Link href="/test">
                 <Button variant="outline" size="sm" className="h-8 text-xs">
-                  测试
+                  Test
                 </Button>
               </Link>
               <Link href="/api-test">
                 <Button variant="outline" size="sm" className="h-8 text-xs">
-                  API测试
+                  API Test
                 </Button>
               </Link>
             </div>
@@ -89,7 +89,7 @@ export function Navbar() {
                   "mr-1 h-2 w-2 rounded-full",
                   isConnected ? "bg-green-500" : "bg-gray-500"
                 )}></div>
-                {isConnected ? "已连接" : "未连接"}
+                {isConnected ? "Connected" : "Disconnected"}
               </Badge>
             </div>
 

@@ -24,7 +24,7 @@ export function ClientSideModel3DViewer({ taskResult, className, autoDownload, h
       <div className="h-96 bg-muted/50 rounded-lg flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="text-muted-foreground">初始化3D查看器...</span>
+          <span className="text-muted-foreground">Initializing 3D viewer...</span>
         </div>
       </div>
     );

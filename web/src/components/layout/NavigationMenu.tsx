@@ -17,9 +17,9 @@ import {
 const navigation = [
   { name: '首页', href: '/', icon: 'Home' },
   { name: 'AI生成', href: '/generate', icon: 'Sparkles' },
-  { name: '我的NFT', href: '/nft', icon: 'Coins' },
+  // { name: '我的NFT', href: '/nft', icon: 'Coins' }, // 暂时隐藏入口
   { name: '我的资产', href: '/profile', icon: 'User' },
-  { name: 'NFT市场', href: '/marketplace', icon: 'ShoppingBag' },
+  // { name: 'NFT市场', href: '/marketplace', icon: 'ShoppingBag' }, // 暂时隐藏入口
   { name: 'SDK测试', href: '/meshy-test', icon: 'TestTube', badge: 'SDK' },
   { name: 'API格式测试', href: '/api-test', icon: 'TestTube', badge: 'API' },
   { name: '测试页面', href: '/test', icon: 'TestTube', badge: 'DEV' },

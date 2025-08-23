@@ -79,12 +79,15 @@ export function THomepage() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
+            {/** 暂时隐藏首页的“Browse Market”入口 */}
+            {/**
             <Button variant="outline" size="lg" asChild className="border-blue-700 text-blue-400 hover:bg-blue-700 hover:text-white">
               <Link href="/marketplace">
                 <Zap className="mr-2 h-5 w-5" />
                 Browse Market
               </Link>
             </Button>
+            */}
           </div>
         </div>
 

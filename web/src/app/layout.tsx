@@ -6,8 +6,8 @@ import { Providers } from '@/store/providers/Providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'GEN-3D-ASSETS - AI驱动的3D资产NFT平台',
-  description: '使用AI技术生成独特的3D模型，并将其铸造为NFT',
+  title: 'GEN-3D-ASSETS - AI-powered 3D Asset NFT Platform',
+  description: 'Generate unique 3D models with AI and mint them as NFTs',
 };
 
 export default function RootLayout({

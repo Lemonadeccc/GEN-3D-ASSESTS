@@ -1,6 +1,6 @@
 'use client';
 
-// 禁用静态生成
+// Disable static generation
 export const dynamic = 'force-dynamic';
 
 import { LayoutWrapper } from '@/components/layout/LayoutWrapper';

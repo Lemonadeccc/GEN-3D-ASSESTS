@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, Coins, User } from 'lucide-react';
+import { LogOut /*, Settings, Coins, User*/ } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function TNavigation() {
@@ -88,6 +88,7 @@ export function TNavigation() {
               GENERATE
             </span>
           </Link>
+          {/*
           <Link href="/nft">
             <span className="cursor-pointer text-white hover:text-blue-400 transition-colors px-3 py-1 rounded hover:bg-gray-800/50">
               NFT
@@ -98,13 +99,14 @@ export function TNavigation() {
               MARKET
             </span>
           </Link>
+          */}
         </div>
         
         {/* 钱包连接区域 */}
         {!isMounted ? (
           // 服务端渲染时显示加载状态，避免hydration错误
           <div className="bg-gray-800 rounded-full flex items-center gap-2 p-2 border border-gray-600">
-            <span className="text-gray-400 pl-2">加载中...</span>
+            <span className="text-gray-400 pl-2">Loading...</span>
           </div>
         ) : isConnected && address ? (
           <DropdownMenu>
@@ -120,39 +122,24 @@ export function TNavigation() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-gray-800 border-gray-700">
               <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
+                <div className="flex flex-col space-y-1 w-full">
                   <p className="text-sm font-medium leading-none text-white">
-                    {connector?.name || '我的钱包'}
+                    {connector?.name || 'Wallet'}
                   </p>
-                  <p className="text-xs leading-none text-gray-400">
-                    {formatAddress(address)}
+                  {/* 地址右对齐并在到达右侧时才省略显示 */}
+                  <p className="text-xs leading-none text-gray-400 w-full text-right truncate">
+                    {address}
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-gray-600" />
-              <DropdownMenuItem asChild className="text-white hover:bg-gray-700">
-                <Link href="/nft" className="flex items-center">
-                  <Coins className="mr-2 h-4 w-4" />
-                  <span>我的 NFT</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="text-white hover:bg-gray-700">
-                <Link href="/profile" className="flex items-center">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>个人中心</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center text-white hover:bg-gray-700">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>设置</span>
-              </DropdownMenuItem>
+              
               <DropdownMenuSeparator className="bg-gray-600" />
               <DropdownMenuItem 
                 onClick={handleDisconnect}
                 className="flex items-center text-red-400 hover:bg-gray-700"
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>断开连接</span>
+                <span>Disconnect</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

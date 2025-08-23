@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   useAccount,
   useWriteContract,
   useWaitForTransactionReceipt,
 } from 'wagmi';
+import { sepolia } from 'wagmi/chains';
 import { parseEther, type Address } from 'viem';
 import {
   ASSET3D_NFT_ABI,
@@ -27,6 +28,8 @@ export function useNFTMint() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<string>('');
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  // 防止重复提交（快速双击或渲染抖动导致的重复请求）
+  const isMintingRef = useRef(false);
 
   const { address, chainId } = useAccount();
   const { writeContract, data: hash, error, isPending } = useWriteContract();
@@ -51,14 +54,14 @@ export function useNFTMint() {
   // 监听交易状态变化
   useEffect(() => {
     if (hash && isPending) {
-      setCurrentStep('交易已提交，等待确认...');
+      setCurrentStep('Transaction submitted, awaiting confirmation...');
       
       // 设置超时保护 (5分钟)
       const timeout = setTimeout(() => {
         if (isLoading) {
           resetState();
-          toast.error('交易超时，请重试', {
-            description: '如果交易已提交，请在Etherscan查看状态'
+          toast.error('Transaction timeout', {
+            description: 'If the transaction was submitted, check its status on Etherscan'
           });
         }
       }, 5 * 60 * 1000);
@@ -69,7 +72,7 @@ export function useNFTMint() {
 
   useEffect(() => {
     if (hash && isConfirming) {
-      setCurrentStep('交易确认中，请稍候...');
+      setCurrentStep('Transaction confirming, please wait...');
     }
   }, [hash, isConfirming]);
 
@@ -77,8 +80,9 @@ export function useNFTMint() {
   useEffect(() => {
     if (isTransactionSuccess && isLoading) {
       resetState();
-      toast.success('NFT 铸造成功！', {
-        description: '您的3D NFT已成功铸造到区块链',
+      isMintingRef.current = false;
+      toast.success('NFT minted successfully!', {
+        description: 'Your 3D NFT has been minted on-chain',
       });
     }
   }, [isTransactionSuccess, isLoading]);
@@ -88,16 +92,17 @@ export function useNFTMint() {
     if (error && isLoading) {
       console.error('Contract write error:', error);
       resetState();
+      isMintingRef.current = false;
       
-      let errorMessage = '交易失败';
+      let errorMessage = 'Transaction failed';
       if (error.message.includes('User rejected')) {
-        errorMessage = '用户取消了交易';
+        errorMessage = 'User rejected the transaction';
       } else if (error.message.includes('insufficient funds')) {
-        errorMessage = '余额不足支付gas费用';
+        errorMessage = 'Insufficient funds for gas';
       } else if (error.message.includes('nonce')) {
-        errorMessage = '交易序号错误，请重试';
+        errorMessage = 'Nonce error, please retry';
       } else {
-        errorMessage = `交易失败: ${error.message}`;
+        errorMessage = `Transaction failed: ${error.message}`;
       }
       
       toast.error(errorMessage);
@@ -109,7 +114,8 @@ export function useNFTMint() {
     if (transactionError && isLoading) {
       console.error('Transaction confirmation error:', transactionError);
       resetState();
-      toast.error(`交易确认失败: ${transactionError.message}`);
+      isMintingRef.current = false;
+      toast.error(`Transaction confirmation failed: ${transactionError.message}`);
     }
   }, [transactionError, isLoading]);
 
@@ -128,25 +134,29 @@ export function useNFTMint() {
     taskResult,
     royaltyBps = 250,
   }: MintNFTParams) => {
+    // 并发保护：若正在铸造，直接忽略后续点击
+    if (isMintingRef.current || isLoading) return;
+    isMintingRef.current = true;
+
     if (!address) {
-      toast.error('请先连接钱包');
+      toast.error('Please connect your wallet first');
+      isMintingRef.current = false;
       return;
     }
 
-    if (
-      !chainId ||
-      !CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES]
-    ) {
-      toast.error('不支持的网络，请切换到Sepolia测试网');
+    // 若未连接到受支持的网络，直接提示并终止（避免弹出切网确认框）
+    if (chainId !== sepolia.id) {
+      isMintingRef.current = false;
+      toast.error('Please switch to Sepolia in MetaMask, then click Mint');
       return;
     }
 
     setIsLoading(true);
-    setCurrentStep('准备元数据...');
+    setCurrentStep('Preparing metadata...');
 
     try {
       // 1. 上传元数据到 IPFS
-      setCurrentStep('上传元数据到 IPFS...');
+      setCurrentStep('Uploading metadata to IPFS...');
       const metadataResult = await createAndUploadNFTMetadata(
         name,
         description,
@@ -164,13 +174,11 @@ export function useNFTMint() {
         }
       );
 
-      toast.success('元数据上传成功！');
+      toast.success('Metadata uploaded successfully!');
 
       // 2. 准备合约参数
-      setCurrentStep('准备铸造参数...');
-      const contractAddress = CONTRACT_ADDRESSES[
-        chainId as keyof typeof CONTRACT_ADDRESSES
-      ].ASSET3D_NFT as Address;
+      setCurrentStep('Preparing mint params...');
+      const contractAddress = CONTRACT_ADDRESSES[sepolia.id].ASSET3D_NFT as Address;
 
       const metadata: Asset3DMetadata = {
         name,
@@ -190,7 +198,7 @@ export function useNFTMint() {
       };
 
       // 3. 调用合约铸造
-      setCurrentStep('发送交易到区块链...');
+      setCurrentStep('Sending transaction to blockchain...');
       console.log('Calling writeContract with:', {
         contractAddress,
         metadata,
@@ -208,13 +216,14 @@ export function useNFTMint() {
       console.error('Error minting NFT:', error);
       setIsLoading(false);
       setCurrentStep('');
+      isMintingRef.current = false;
       
-      let errorMessage = '铸造失败';
+      let errorMessage = 'Mint failed';
       if (error instanceof Error) {
         if (error.message.includes('Failed to create NFT metadata')) {
-          errorMessage = '元数据创建失败，请检查IPFS配置';
+          errorMessage = 'Failed to create metadata, check IPFS config';
         } else {
-          errorMessage = `铸造失败: ${error.message}`;
+          errorMessage = `Mint failed: ${error.message}`;
         }
       }
       
@@ -226,7 +235,7 @@ export function useNFTMint() {
     mintNFT,
     resetState, // 暴露重置函数，允许手动重置
     isLoading: isLoading || isPending || isConfirming,
-    currentStep: currentStep || (isPending ? '等待钱包确认...' : (isConfirming ? '交易确认中...' : '')),
+    currentStep: currentStep || (isPending ? 'Waiting for wallet confirmation...' : (isConfirming ? 'Transaction confirming...' : '')),
     hash,
     isSuccess: isTransactionSuccess,
     error: error || transactionError,

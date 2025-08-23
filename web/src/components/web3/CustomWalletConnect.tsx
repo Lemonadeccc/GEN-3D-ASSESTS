@@ -40,8 +40,8 @@ export function CustomWalletConnect({
   useEffect(() => {
     if (isConnected && !prevConnected && address) {
       const walletName = connector?.name || '钱包';
-      toast.success(`${walletName} 连接成功！`, {
-        description: `地址: ${formatAddress(address)}`,
+      toast.success(`${walletName} connected`, {
+        description: `Address: ${formatAddress(address)}`,
         duration: 3000,
       });
       setShowConnectDialog(false);
@@ -52,7 +52,7 @@ export function CustomWalletConnect({
   // 监听连接错误
   useEffect(() => {
     if (error) {
-      toast.error('连接失败', {
+      toast.error('Connection failed', {
         description: error.message,
         duration: 4000,
       });
@@ -71,33 +71,33 @@ export function CustomWalletConnect({
 
       // 详细错误处理
       if (error?.message?.includes('User rejected') || error?.code === 4001) {
-        toast.warning('连接已取消', {
-          description: '您取消了钱包连接请求',
+        toast.warning('Connection cancelled', {
+          description: 'You cancelled the wallet connection request',
           duration: 3000,
         });
       } else if (error?.message?.includes('No MetaMask')) {
-        toast.error('MetaMask未安装', {
-          description: '请安装MetaMask浏览器扩展后重试',
+        toast.error('MetaMask not installed', {
+          description: 'Please install the MetaMask browser extension and try again',
           duration: 5000,
           action: {
-            label: '安装MetaMask',
+            label: 'Install MetaMask',
             onClick: () => window.open('https://metamask.io/download/', '_blank')
           }
         });
       } else if (error?.message?.includes('selectExtension') ||
         error?.cause?.message?.includes('selectExtension') ||
         error?.message?.includes('Unexpected error')) {
-        toast.error('多钱包扩展冲突', {
-          description: '检测到多个钱包扩展，请禁用其他钱包（如Phantom）只保留MetaMask',
+        toast.error('Multiple wallet extensions conflict', {
+          description: 'Detected multiple wallet extensions. Disable others (e.g. Phantom) and keep only MetaMask',
           duration: 7000,
           action: {
-            label: '了解更多',
+            label: 'Learn more',
             onClick: () => window.open('https://metamask.zendesk.com/hc/en-us/articles/360015489611-How-to-add-a-custom-network-RPC', '_blank')
           }
         });
       } else {
-        toast.error('连接失败', {
-          description: error?.message || '未知错误，请重试',
+        toast.error('Connection failed', {
+          description: error?.message || 'Unknown error, please try again',
           duration: 4000,
         });
       }
@@ -109,7 +109,7 @@ export function CustomWalletConnect({
 
   const handleDisconnect = () => {
     disconnect();
-    toast.info('钱包已断开连接');
+    toast.info('Wallet disconnected');
   };
 
   // 已连接状态
@@ -173,24 +173,24 @@ export function CustomWalletConnect({
 
       <DialogContent className="sm:max-w-lg">
         <DialogHeader className="text-center pb-2">
-          <DialogTitle className="text-2xl font-bold">连接MetaMask</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">Connect MetaMask</DialogTitle>
           <DialogDescription className="text-base">
-            请使用MetaMask钱包连接到平台
+            Please connect your MetaMask wallet to the platform
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* 检查MetaMask是否安装 */}
-          {typeof window !== 'undefined' && !window.ethereum?.isMetaMask ? (
-            <div className="p-4 rounded-lg bg-orange-50 border border-orange-200">
+            {typeof window !== 'undefined' && !window.ethereum?.isMetaMask ? (
+              <div className="p-4 rounded-lg bg-orange-50 border border-orange-200">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
                   <Chrome className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <div className="font-semibold text-orange-800">需要安装MetaMask</div>
+                  <div className="font-semibold text-orange-800">MetaMask required</div>
                   <div className="text-sm text-orange-700">
-                    请先安装MetaMask浏览器扩展
+                    Please install the MetaMask browser extension
                   </div>
                 </div>
               </div>
@@ -200,14 +200,14 @@ export function CustomWalletConnect({
                   className="w-full bg-orange-600 hover:bg-orange-700"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  安装MetaMask
+                  Install MetaMask
                 </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-3">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                连接选项
+                Connection Options
               </h3>
 
               {/* MetaMask 移动端连接 */}
@@ -224,7 +224,7 @@ export function CustomWalletConnect({
                       </div>
                       <div>
                         <div className="font-semibold text-lg">MetaMask</div>
-                        <div className="text-sm text-muted-foreground">浏览器应用</div>
+                        <div className="text-sm text-muted-foreground">Browser Extension</div>
                       </div>
                     </div>
                     <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -244,9 +244,9 @@ export function CustomWalletConnect({
             <div className="flex items-start space-x-3">
               <Shield className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm">
-                <div className="font-medium text-foreground mb-1">安全提示</div>
+                <div className="font-medium text-foreground mb-1">Security Tips</div>
                 <div className="text-muted-foreground">
-                  请确保使用官方MetaMask应用，并妥善保管您的助记词和私钥。
+                  Ensure you use the official MetaMask extension and keep your seed phrase and private keys safe.
                 </div>
               </div>
             </div>

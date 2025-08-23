@@ -18,26 +18,26 @@ export default async function EditorPage({ params }: EditorPageProps) {
         <div className="text-center space-y-4">
           <Badge variant="secondary" className="text-sm">
             <Edit3 className="mr-2 h-4 w-4" />
-            3D 编辑器
+            3D Editor
           </Badge>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-            3D 模型编辑器
+            3D Model Editor
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            编辑和优化模型 {modelId}
+            Edit and optimize model {modelId}
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>编辑器功能开发中</CardTitle>
+            <CardTitle>Editor feature in development</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">
-              3D 模型编辑器功能正在开发中，敬请期待...
+              The 3D model editor is under development. Stay tuned...
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              模型 ID: {modelId}
+              Model ID: {modelId}
             </p>
           </CardContent>
         </Card>

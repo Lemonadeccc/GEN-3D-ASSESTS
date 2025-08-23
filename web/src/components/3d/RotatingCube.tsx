@@ -24,7 +24,7 @@ export function RotatingCube() {
 
 export function SimpleCubeScene() {
   return (
-    <div className="w-full h-full bg-neutral-100 rounded-lg flex items-center justify-center">
+    <div className="w-full h-[549px] bg-neutral-100 rounded-lg flex items-center justify-center">
       <div className="w-40 h-40 border-2 border-dashed border-neutral-300 rounded-lg flex items-center justify-center">
         <div className="text-neutral-500 text-sm text-center">
           <div className="w-8 h-8 border border-neutral-400 mx-auto mb-2 animate-pulse"></div>

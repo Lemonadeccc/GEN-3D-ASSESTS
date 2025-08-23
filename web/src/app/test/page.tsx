@@ -1,6 +1,6 @@
 'use client';
 
-// 禁用静态生成
+// Disable static generation
 export const dynamic = 'force-dynamic';
 
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { create } from 'zustand';
 import { useState } from 'react';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 
-// 测试Zustand Store
+// Test Zustand Store
 const useTestStore = create<{
   count: number;
   increment: () => void;
@@ -61,7 +61,7 @@ export default function TestPage() {
   const { count, increment, decrement } = useTestStore();
   const [inputValue, setInputValue] = useState('');
   
-  // 测试TanStack Query
+// Test TanStack Query
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['test-api', count],
     queryFn: async () => {
@@ -101,7 +101,7 @@ export default function TestPage() {
             🚀 3D NFT Platform
           </h1>
           <p className="text-xl text-slate-600">
-            核心依赖包集成测试 - Phase 1 完成
+            Core dependency integration test - Phase 1 complete
           </p>
           <div className="flex justify-center space-x-2">
             <Badge variant="secondary">Next.js 15</Badge>
@@ -111,12 +111,12 @@ export default function TestPage() {
           </div>
         </div>
 
-        {/* 依赖状态卡片 */}
+        {/* Dependency status card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <CheckCircle className="h-6 w-6 text-green-500" />
-              <span>📦 依赖包安装状态</span>
+              <span>📦 Dependency installation status</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -132,17 +132,17 @@ export default function TestPage() {
               ))}
             </div>
             <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-              <p className="text-green-800 font-medium">✅ 所有核心依赖包安装成功，项目基础设施就绪！</p>
+              <p className="text-green-800 font-medium">✅ All core dependencies installed. Project infra is ready!</p>
             </div>
           </CardContent>
         </Card>
 
         <div className="grid lg:grid-cols-2 gap-8">
           
-          {/* 状态管理测试 */}
+        {/* State management test */}
           <Card>
             <CardHeader>
-              <CardTitle>📊 Zustand 状态管理测试</CardTitle>
+              <CardTitle>📊 Zustand state management test</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-center space-x-4">
@@ -162,7 +162,7 @@ export default function TestPage() {
               
               <div className="space-y-2">
                 <Input
-                  placeholder="测试输入..."
+                  placeholder="Test input..."
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                 />
@@ -173,16 +173,16 @@ export default function TestPage() {
               
               <div className="p-3 bg-blue-50 rounded-lg">
                 <p className="text-blue-800 text-sm">
-                  ✅ Zustand store 状态管理正常，UI组件响应正常
+                  ✅ Zustand store works and UI updates correctly
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* 数据获取测试 */}
+        {/* Data fetching test */}
           <Card>
             <CardHeader>
-              <CardTitle>🔄 TanStack Query 数据获取测试</CardTitle>
+              <CardTitle>🔄 TanStack Query data fetching test</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {isLoading ? (
@@ -216,7 +216,7 @@ export default function TestPage() {
                     </div>
                   </div>
                   <Button onClick={() => refetch()} variant="outline" size="sm">
-                    🔄 重新获取数据
+                    🔄 Refetch data
                   </Button>
                 </div>
               )}
@@ -224,10 +224,10 @@ export default function TestPage() {
           </Card>
         </div>
 
-        {/* 3D渲染测试 */}
+        {/* 3D rendering test */}
         <Card>
           <CardHeader>
-            <CardTitle>🎮 React Three Fiber + Three.js 3D渲染测试</CardTitle>
+            <CardTitle>🎮 React Three Fiber + Three.js 3D rendering test</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-80 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 rounded-xl overflow-hidden shadow-inner">
@@ -237,41 +237,41 @@ export default function TestPage() {
             </div>
             <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
               <p className="text-purple-800 text-sm">
-                ✅ Three.js + React Three Fiber 渲染正常。🖱️ 拖拽旋转视角，点击立方体交互！
+                ✅ Three.js + React Three Fiber render correctly. 🖱️ Drag to rotate, click cube to interact!
               </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* 项目信息 */}
+        {/* Project info */}
         <Card>
           <CardHeader>
-            <CardTitle>ℹ️ 项目开发信息</CardTitle>
+            <CardTitle>ℹ️ Project development info</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4 text-sm">
               <div className="space-y-2">
-                <h4 className="font-medium text-slate-700">🏗️ Phase 1 完成项目</h4>
+                <h4 className="font-medium text-slate-700">🏗️ Phase 1 Complete</h4>
                 <ul className="space-y-1 text-slate-600">
-                  <li>✅ 核心依赖包安装 (12个)</li>
-                  <li>✅ shadcn/ui UI组件库</li>
-                  <li>✅ 项目结构创建</li>
-                  <li>✅ 基础测试验证</li>
+                  <li>✅ Core deps installed (12)</li>
+                  <li>✅ shadcn/ui integrated</li>
+                  <li>✅ Project structure scaffolded</li>
+                  <li>✅ Basic tests verified</li>
                 </ul>
               </div>
               <div className="space-y-2">
-                <h4 className="font-medium text-slate-700">🎯 下一步 Phase 2</h4>
+                <h4 className="font-medium text-slate-700">🎯 Next: Phase 2</h4>
                 <ul className="space-y-1 text-slate-600">
-                  <li>🔄 配置Providers和路由</li>
-                  <li>🔄 创建基础布局组件</li>
-                  <li>🔄 实现页面导航系统</li>
-                  <li>🔄 Meshy API集成</li>
+                  <li>🔄 Configure providers and routing</li>
+                  <li>🔄 Create base layout components</li>
+                  <li>🔄 Implement page navigation</li>
+                  <li>🔄 Integrate Meshy API</li>
                 </ul>
               </div>
             </div>
             <div className="p-4 bg-slate-50 rounded-lg">
               <p className="text-slate-700 font-medium">
-                🎉 Phase 1 基础设施搭建完成！现在可以开始开发核心功能了。
+                🎉 Phase 1 infrastructure completed! Time to build core features.
               </p>
             </div>
           </CardContent>

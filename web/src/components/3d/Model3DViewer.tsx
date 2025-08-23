@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useRef, useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF, useFBX, Environment } from '@react-three/drei';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -239,9 +240,23 @@ export function Model3DViewer({ taskResult, className }: Model3DViewerProps) {
       <Canvas
         camera={{ position: [0, 0, 5], fov: 45 }}
         className="rounded-lg"
+        dpr={[1, 1.5]}
+        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: false }}
         onCreated={({ gl }) => {
-          gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+          gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
           console.log('Canvas created successfully');
+          const canvas = gl.domElement as HTMLCanvasElement;
+          const onLost = (e: Event) => {
+            e.preventDefault();
+            console.warn('WebGL context lost');
+            toast.warning('3D 预览已暂停（显卡资源不足）');
+          };
+          const onRestored = () => {
+            console.info('WebGL context restored');
+            toast.success('3D 预览已恢复');
+          };
+          canvas.addEventListener('webglcontextlost', onLost as EventListener, false);
+          canvas.addEventListener('webglcontextrestored', onRestored as EventListener, false);
         }}
         onError={(error) => {
           console.error('Canvas error:', error);

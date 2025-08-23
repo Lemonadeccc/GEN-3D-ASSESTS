@@ -16,17 +16,17 @@ export default function NotFound() {
           <div className="mx-auto h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
             <span className="text-2xl">🔍</span>
           </div>
-          <CardTitle className="text-2xl">页面未找到</CardTitle>
+          <CardTitle className="text-2xl">Page Not Found</CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-4">
           <p className="text-muted-foreground">
-            抱歉，您访问的页面不存在。
+            Sorry, the page you’re looking for doesn’t exist.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
             <Link href="/">
               <Button className="w-full sm:w-auto">
                 <Home className="mr-2 h-4 w-4" />
-                回到首页
+                Go Home
               </Button>
             </Link>
             <Button 
@@ -35,7 +35,7 @@ export default function NotFound() {
               className="w-full sm:w-auto"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              返回上页
+              Go Back
             </Button>
           </div>
         </CardContent>
