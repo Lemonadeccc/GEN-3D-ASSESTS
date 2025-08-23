@@ -22,7 +22,6 @@ import {
   Box
 } from 'lucide-react';
 import { NFTMintDialog } from '@/components/web3/NFTMintDialog';
-import { NFTDebugTools } from '@/components/web3/NFTDebugTools';
 import { storage } from '@/lib/storage';
 import Link from 'next/link';
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -655,47 +654,9 @@ export function TNFTPage() {
             </Link>
           </Button>
 
-          {/* NFT调试工具 */}
-          <NFTDebugTools />
+          
 
-          {/* 开发环境：Ready to Mint 调试工具 */}
-          {process.env.NODE_ENV === 'development' && (
-            <Card className="bg-yellow-50 border-yellow-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-yellow-800">
-                  Ready to Mint Debug Tools
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="text-xs text-yellow-700">
-                  All Models: {storage.getAllSuccessfulModels().length} | 
-                  Minted: {storage.getMintedModels().length} | 
-                  Ready: {mintableModels.length}
-                </div>
-                <div className="flex space-x-1">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="text-xs h-6 border-yellow-300"
-                    onClick={refreshMintableModels}
-                  >
-                    Refresh
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="text-xs h-6 border-red-300 text-red-600"
-                    onClick={() => {
-                      storage.clearMintedModels();
-                      refreshMintableModels();
-                    }}
-                  >
-                    Clear Minted
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          
         </div>
 
         {/* 右侧 67% - 分为两个区域 */}

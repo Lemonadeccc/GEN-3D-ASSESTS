@@ -40,7 +40,7 @@ export function CustomWalletConnect({
   // 监听连接状态变化
   useEffect(() => {
     if (isConnected && !prevConnected && address) {
-      const walletName = connector?.name || '钱包';
+      const walletName = connector?.name || 'Wallet';
       toast.success(`${walletName} connected`, {
         description: `Address: ${formatAddress(address)}`,
         duration: 3000,
@@ -143,7 +143,7 @@ export function CustomWalletConnect({
         {variant === 'new-design' ? (
           <div className="bg-neutral-900 rounded-full flex items-center gap-2 p-2 hover:bg-neutral-800 transition-colors cursor-pointer">
             <span className="text-neutral-100 pl-2 hover:text-white transition-colors">
-              {isPending ? '连接中...' : '连接钱包'}
+              {isPending ? 'Connecting...' : 'Connect Wallet'}
             </span>
             <div className="flex p-2 rounded-full bg-neutral-100 items-center justify-center size-8 hover:bg-neutral-200 transition-colors">
               {isPending ? (
@@ -166,7 +166,7 @@ export function CustomWalletConnect({
               <Wallet className="h-4 w-4" />
             )}
             <span className="hidden sm:inline">
-              {isPending ? '连接中...' : '连接钱包'}
+              {isPending ? 'Connecting...' : 'Connect Wallet'}
             </span>
           </Button>
         )}

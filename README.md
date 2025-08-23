@@ -141,21 +141,25 @@ GEN-3D-ASSETS/
 ## 🎮 使用指南
 
 ### 1. 连接钱包
+
 点击首页的"连接钱包"按钮。通过 ConnectKit 支持 MetaMask、WalletConnect 等主流钱包。
 
 ### 2. 生成 3D 资产
+
 - 导航到"生成"页面
 - 输入描述性提示词（例如："一只未来主义的蓝色龙"）
 - 等待 AI 生成 3D 模型
 - 预览并确认模型质量
 
 ### 3. 铸造 NFT
+
 - 选择满意的 3D 模型
 - 设置资产信息（名称、描述、版税比例）
 - 支付 Gas 费用完成链上铸造
 - 获得独特的 NFT 所有权
 
 ### 4. 查看和交易
+
 - 在"画廊"中浏览所有 3D 资产
 - 查看详细的 3D 模型信息
 - 在"市场"中交易 NFT
@@ -190,6 +194,7 @@ forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 ### Asset3DNFT.sol 特性
 
 #### 核心 NFT 功能 (ERC-721)
+
 - ✅ NFT 铸造和管理
 - ✅ IPFS 集成的元数据存储
 - ✅ 版税机制 (EIP-2981)
@@ -197,6 +202,7 @@ forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 - ✅ 批量铸造支持
 
 #### 高级功能
+
 - ✅ 资产升级系统（预览→精细模式）
 - ✅ 纹理 URL 管理
 - ✅ 创作者资产追踪
@@ -204,6 +210,7 @@ forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 - ✅ 紧急暂停合约控制
 
 #### 安全功能
+
 - ✅ ReentrancyGuard 保护
 - ✅ 基于角色的访问控制
 - ✅ 输入验证和元数据验证
@@ -230,6 +237,7 @@ forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 ## 🛣️ 发展路线图
 
 ### v1.0 - MVP ✅
+
 - [x] 技术选型和架构设计
 - [x] 智能合约开发 (Asset3DNFT)
 - [x] 基础 3D 生成和展示
@@ -237,6 +245,7 @@ forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 - [x] 简单市场界面
 
 ### v1.1 - 功能增强 🚧
+
 - [x] UI 优化和钱包连接重构
 - [x] 页面性能优化
 - [ ] 批量生成和铸造
@@ -245,6 +254,7 @@ forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 - [ ] 多语言支持
 
 ### v2.0 - 平台扩展 📋
+
 - [ ] 公共 API 平台
 - [ ] 插件生态系统
 - [ ] Layer 2 集成
@@ -281,6 +291,7 @@ forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY
 ## 📈 最新更新
 
 ### v1.1.0 (2024-12-23)
+
 - ✅ 优化 UI 界面和用户体验
 - ✅ 重构钱包连接组件，修复 MetaMask 连接问题
 - ✅ 页面性能优化和组件结构改进

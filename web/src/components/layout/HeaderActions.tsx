@@ -23,7 +23,7 @@ export function HeaderActions() {
               disabled={isConnecting}
             >
               <Wallet className="h-4 w-4 mr-2" />
-              {isConnected ? (truncatedAddress || ensName) : (isConnecting ? '连接中...' : '连接钱包')}
+              {isConnected ? (truncatedAddress || ensName) : (isConnecting ? 'Connecting...' : 'Connect Wallet')}
             </Button>
           );
         }}
